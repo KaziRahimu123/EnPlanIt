@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Scenario calculation router for AstroOps Scenario Lab.
+"""Scenario calculation router for EnPlanIt Scenario Lab.
 
 All logic is rule-based. Thresholds are transparent and documented inline.
 No AI is used here — this module produces deterministic planning concerns.

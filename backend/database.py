@@ -1,11 +1,11 @@
-"""SQLAlchemy database setup for AstroOps Scenario Lab."""
+"""SQLAlchemy database setup for EnPlanIt Scenario Lab."""
 
 import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 # Store the SQLite file in the backend directory
-_DB_PATH = os.path.join(os.path.dirname(__file__), "astroops.db")
+_DB_PATH = os.path.join(os.path.dirname(__file__), "enplanit.db")
 DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{_DB_PATH}")
 
 engine = create_engine(

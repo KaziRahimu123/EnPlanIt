@@ -134,8 +134,8 @@ flowchart TD
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/TasinKazi/AstroOps.git
-cd AstroOps
+git clone https://github.com/TasinKazi/EnPlanIt.git
+cd EnPlanIt
 ```
 
 ### 2. Configure Environment Variables

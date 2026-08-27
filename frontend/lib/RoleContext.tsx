@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * RoleContext — manages the active user role for AstroOps.
+ * RoleContext — manages the active user role for EnPlanIt.
  *
  * Roles: 'mission_controller' | 'risk_analyst' | null (not yet selected)
  *
@@ -56,7 +56,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     const savedLocalRole =
       typeof window !== "undefined"
-        ? (localStorage.getItem(`astroops_role_${user.sub}`) as UserRole | null)
+        ? (localStorage.getItem(`enplanit_role_${user.sub}`) as UserRole | null)
         : null;
 
     getProfile()
@@ -81,7 +81,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     async (role: UserRole) => {
       if (user?.sub) {
         try {
-          localStorage.setItem(`astroops_role_${user.sub}`, role);
+          localStorage.setItem(`enplanit_role_${user.sub}`, role);
         } catch {}
       }
       try {

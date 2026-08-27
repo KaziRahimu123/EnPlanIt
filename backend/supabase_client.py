@@ -1,4 +1,4 @@
-"""Supabase client singleton for AstroOps Scenario Lab.
+"""Supabase client singleton for EnPlanIt Scenario Lab.
 
 Usage in routers:
     from supabase_client import get_supabase

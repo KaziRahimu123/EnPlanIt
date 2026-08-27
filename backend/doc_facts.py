@@ -1,4 +1,4 @@
-"""Document facts extraction for AstroOps Scenario Lab.
+"""Document facts extraction for EnPlanIt Scenario Lab.
 
 Uses the existing AI client (OpenAI or Granite) to extract structured
 planning facts from document chunks.

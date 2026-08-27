@@ -5,7 +5,7 @@ Flow (Authorization Code, no PKCE — server-side):
      Backend redirects the browser to the provider's authorization URL.
   2. Provider redirects back to GET /api/auth/oauth/{provider}/callback?code=…
      Backend exchanges the code for tokens, fetches user info, finds-or-creates
-     an AstroOps user, issues a JWT, then redirects the browser back to the
+     an EnPlanIt user, issues a JWT, then redirects the browser back to the
      frontend with ?token=<jwt>&name=<name> appended to the `next` URL.
   3. Frontend's /login page (or /oauth-callback) reads the token from the URL
      and stores it in localStorage, then navigates to Dashboard.

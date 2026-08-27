@@ -1,4 +1,4 @@
-"""JWT authentication helpers and FastAPI dependency for AstroOps Scenario Lab."""
+"""JWT authentication helpers and FastAPI dependency for EnPlanIt Scenario Lab."""
 
 from __future__ import annotations
 

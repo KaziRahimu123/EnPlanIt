@@ -1,4 +1,4 @@
-"""SQLAlchemy ORM models for AstroOps Scenario Lab."""
+"""SQLAlchemy ORM models for EnPlanIt Scenario Lab."""
 
 from datetime import datetime
 from typing import Optional
@@ -29,7 +29,7 @@ class User(Base):
 
 
 class OAuthAccount(Base):
-    """Stores the link between an AstroOps user and a third-party OAuth identity."""
+    """Stores the link between an EnPlanIt user and a third-party OAuth identity."""
 
     __tablename__ = "oauth_accounts"
 

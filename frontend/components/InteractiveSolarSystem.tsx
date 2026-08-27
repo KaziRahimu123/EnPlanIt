@@ -19,7 +19,7 @@ export interface PlanetData {
   velocityKmS: string;    // Orbital velocity
   temp: string;           // Temperature
   moons: number;
-  missionTarget: string;  // Active mission / AstroOps designation
+  missionTarget: string;  // Active mission / EnPlanIt designation
   description: string;
   hasRings?: boolean;
   ringsRadius?: number;

@@ -1,4 +1,4 @@
-"""Profile router — role persistence for AstroOps Scenario Lab.
+"""Profile router — role persistence for EnPlanIt Scenario Lab.
 
 Provides GET and PATCH endpoints for the authenticated user's profile.
 Role values: 'mission_controller' | 'risk_analyst'

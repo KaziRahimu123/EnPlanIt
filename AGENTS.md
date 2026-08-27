@@ -1,4 +1,4 @@
-# Agent Guidelines — EnPlanIt (AstroOps)
+# Agent Guidelines — EnPlanIt
 
 Welcome to the **EnPlanIt** codebase. This repository contains a full-stack aerospace mission intelligence and scenario simulation platform built for the **IBM AI Builders Challenge (Space Exploration)**.
 

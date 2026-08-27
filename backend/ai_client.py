@@ -1,4 +1,4 @@
-"""AI client for AstroOps Scenario Lab.
+"""AI client for EnPlanIt Scenario Lab.
 
 Supports multi-tier model execution:
   1. IBM Granite Models (via IBM watsonx.ai or OpenAI-compatible Granite gateway/Ollama/vLLM)

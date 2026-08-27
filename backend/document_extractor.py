@@ -1,4 +1,4 @@
-"""Document text extraction utilities for AstroOps Scenario Lab.
+"""Document text extraction utilities for EnPlanIt Scenario Lab.
 
 Supports PDF, TXT, and DOCX. Returns (chunks, page_count, word_count).
 Each chunk carries a page_number for citation traceability.

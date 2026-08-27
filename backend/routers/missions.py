@@ -1,4 +1,4 @@
-"""Mission routes for AstroOps Scenario Lab — Supabase-backed, Auth0-authenticated."""
+"""Mission routes for EnPlanIt Scenario Lab — Supabase-backed, Auth0-authenticated."""
 
 from datetime import datetime, timezone
 from typing import Optional

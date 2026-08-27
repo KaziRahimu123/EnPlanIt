@@ -1,4 +1,4 @@
-"""Auth0 JWT validation and FastAPI dependency for AstroOps Scenario Lab.
+"""Auth0 JWT validation and FastAPI dependency for EnPlanIt Scenario Lab.
 
 Validates RS256 access tokens issued by Auth0 using the tenant's JWKS endpoint.
 Exposes `get_current_user` — a FastAPI dependency that returns:
@@ -185,8 +185,8 @@ def _verify_token(token: str) -> dict:
             short_hash = hashlib.sha256(token.encode("utf-8", errors="ignore")).hexdigest()[:16]
             payload = {
                 "sub": f"auth0|session_{short_hash}",
-                "email": "user@astroops.local",
-                "name": "AstroOps Operator",
+                "email": "user@enplanit.local",
+                "name": "EnPlanIt Operator",
             }
         else:
             raise JWTError("Invalid or unrecognizable authentication token")

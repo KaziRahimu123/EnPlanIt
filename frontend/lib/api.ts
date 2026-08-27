@@ -1,5 +1,5 @@
 /**
- * api.ts — AstroOps API client.
+ * api.ts — EnPlanIt API client.
  *
  * authFetch attaches an Auth0 access token obtained via the
  * @auth0/nextjs-auth0 v4 client-side getAccessToken() helper.

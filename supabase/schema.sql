@@ -1,5 +1,4 @@
--- ─────────────────────────────────────────────────────────────────────────────
--- EnPlanIt (AstroOps) — Comprehensive Supabase Database Schema
+-- EnPlanIt — Comprehensive Supabase Database Schema
 -- Built for AI Builders Challenge (IBM Bob)
 -- ─────────────────────────────────────────────────────────────────────────────
 

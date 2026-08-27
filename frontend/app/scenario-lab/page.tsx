@@ -523,7 +523,7 @@ function ScenarioContent() {
       .then((ms) => {
         setMissionsList(ms);
         if (!rawMissionId) {
-          const stored = typeof window !== "undefined" ? localStorage.getItem("astroops_last_mission_id") : null;
+          const stored = typeof window !== "undefined" ? (localStorage.getItem("enplanit_last_mission_id") || localStorage.getItem("astroops_last_mission_id")) : null;
           if (stored && ms.some((m) => m.id === stored)) {
             setActiveMissionId(stored);
           } else if (ms.length > 0) {
@@ -539,7 +539,7 @@ function ScenarioContent() {
     if (!activeMissionId) return;
 
     if (typeof window !== "undefined") {
-      localStorage.setItem("astroops_last_mission_id", activeMissionId);
+      localStorage.setItem("enplanit_last_mission_id", activeMissionId);
     }
 
     let loadedMission: Mission | null = null;

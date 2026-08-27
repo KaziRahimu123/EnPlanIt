@@ -9,7 +9,7 @@
 
 | Category | Details |
 | :--- | :--- |
-| **Project Name** | **EnPlanIt** (AstroOps) |
+| **Project Name** | **EnPlanIt** |
 | **Tagline** | *Enlighten your mission. Plan it to perfection.* |
 | **Live App** | [https://enplanit.vercel.app](https://enplanit.vercel.app) |
 | **Video Demo** | [Watch 3-Minute Demo Video](https://youtu.be/your-demo-video) |
@@ -78,5 +78,5 @@ flowchart LR
 ## 📬 Contact & Team
 
 * **Author / Builder:** Kazi Rahimu Islam
-* **Repository:** [https://github.com/TasinKazi/AstroOps](https://github.com/TasinKazi/AstroOps)
+* **Repository:** [https://github.com/TasinKazi/EnPlanIt](https://github.com/TasinKazi/EnPlanIt)
 * **License:** Apache License 2.0

@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * SpaceBackground — AstroOps Combined Ultimate
+ * SpaceBackground — EnPlanIt Combined Ultimate
  *
  * Rendering pipeline (back → front, every rAF frame):
  *   1. putImageData — static cache:
