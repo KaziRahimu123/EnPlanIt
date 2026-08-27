@@ -52,8 +52,22 @@ export default function RoleSelector({ onClose }: RoleSelectorProps) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[99999] flex items-center justify-center px-4"
-      style={{ background: "rgba(3,7,18,0.85)", backdropFilter: "blur(8px)" }}
+      className="fixed inset-0 flex items-center justify-center px-4"
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100vw",
+        height: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(3,7,18,0.85)",
+        backdropFilter: "blur(8px)",
+        zIndex: 999999,
+      }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="w-full max-w-md">

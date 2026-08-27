@@ -56,15 +56,19 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     const savedLocalRole =
       typeof window !== "undefined"
-        ? (localStorage.getItem(`enplanit_role_${user.sub}`) as UserRole | null)
-        : null;
+        ? ((localStorage.getItem(`enplanit_role_${user.sub}`) ||
+            localStorage.getItem(`astroops_role_${user.sub}`) ||
+            "mission_controller") as UserRole)
+        : ("mission_controller" as UserRole);
 
     getProfile()
       .then((p) => {
-        if (!p.role && savedLocalRole) {
-          p.role = savedLocalRole;
-        }
+        const resolvedRole = p.role || savedLocalRole || "mission_controller";
+        p.role = resolvedRole;
         setProfile(p);
+        if (typeof window !== "undefined" && user.sub) {
+          localStorage.setItem(`enplanit_role_${user.sub}`, resolvedRole);
+        }
       })
       .catch(() => {
         setProfile({

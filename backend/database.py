@@ -2,7 +2,7 @@
 
 import os
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 # Store the SQLite file in the backend directory
 _DB_PATH = os.path.join(os.path.dirname(__file__), "enplanit.db")

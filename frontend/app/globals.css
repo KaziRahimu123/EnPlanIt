@@ -88,7 +88,9 @@ body {
 }
 
 /* Page content sits above the fixed canvas (z-index 0) */
-body > * {
+body > main,
+body > header,
+body > footer {
   position: relative;
   z-index: 1;
 }
