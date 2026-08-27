@@ -1,82 +1,25 @@
-# 🧑‍⚖️ Judge's Quick Guide — EnPlanIt
+# ⚖️ EnPlanIt — 90-Second Judge's Guide
 
-> **IBM AI Builders Challenge — August 2026 Challenge: Space Exploration**  
-> *"Mission Beyond Earth: From Data-Heavy Spaceflight to Insight-Driven Systems"*
-
----
-
-## 📌 Executive Summary
-
-| Category | Details |
-| :--- | :--- |
-| **Project Name** | **EnPlanIt** |
-| **Tagline** | *Enlighten your mission. Plan it to perfection.* |
-| **Live App** | [https://enplanit.vercel.app](https://enplanit.vercel.app) |
-| **Video Demo** | [Watch 3-Minute Demo Video](https://youtu.be/your-demo-video) |
-| **Theme Track** | **Space Exploration (August Challenge)** |
-| **IBM Technologies** | **IBM Bob** (Development Partner) · **IBM watsonx.ai Granite 3.0** (`ibm/granite-3-3-8b-instruct`) |
-| **Core Architecture** | Next.js 14 Cockpit + FastAPI Backend + Supabase PostgreSQL & Storage + Auth0 Universal Identity |
+Welcome IBM Challenge Judges! Follow these 5 quick steps to test EnPlanIt on the live app in under 90 seconds.
 
 ---
 
-## 🎯 Evaluation Criteria Alignment
+### Step 1: Open the Live Application
+Visit [https://enplanit.vercel.app](https://enplanit.vercel.app) and click **"Sign In"** or **"Launch Mission Cockpit"** to log in via Auth0.
 
-### 1. Theme Alignment: Space Exploration (Score: 10/10)
-EnPlanIt is built specifically for aerospace mission architects, systems engineers, and flight directors. It bridges raw flight dossiers (PDF, DOCX, TXT, MD) and mission execution through an automated **3-pillar cognitive pipeline**:
-1. **Create Mission (Ingestion):** Ingests up to 5,000 characters across multi-file dossiers, extracting 6 verified telemetry channels with active vs. historical flight spec disambiguation.
-2. **Mission Analysis Cockpit:** Renders real-time interactive topological orbital digital twins and plain-English NASA-standard flight roadmaps.
-3. **Scenario Lab (What-If Engine):** Stress-tests mission parameters with non-linear physics (Peukert battery retention, solar eclipse degradation, communication delays) and evaluates cascading fault trees against **NASA-STD-3001** life-support constraints.
+### Step 2: Ingest Mission Flight Specs (Multi-Source Ingestion)
+Go to `/missions/create` and upload a spaceflight dossier (PDF, DOCX, TXT, MD up to 3 files / 20 MB) or enter a natural-language mission concept (e.g. *Artemis Base Alpha 365-Day Crewed Lunar Outpost*).
 
-### 2. Use of IBM Technologies & IBM Bob (Score: 10/10)
-* **IBM Bob Development Workflow:** Used as the primary AI pair-programming partner to architect the dual-pass inference engine, design deterministic aerospace physics simulations, and harden the serverless API proxy.
-* **IBM watsonx.ai Granite 3.0:** Serves as the core inference model (`backend/granite.py`) for extracting structured telemetry parameters, resolving conflicting requirements across documents, and synthesizing mission directives.
+### Step 3: Experience the Mission Analysis Cockpit
+Watch **IBM Granite 3.0 on watsonx.ai** synthesize flight telemetry into structured intelligence in seconds:
+- 🪐 **Interactive Orbital Topological Map**: Trace live dependencies between Power, Communications, Thermal, Life Support, and Science.
+- 📊 **6-Channel Verified Telemetry Strip**: View extracted solar flux, orbital period, battery depth-of-discharge, and comms latency with document citations.
+- 📋 **Flight Operations Roadmap**: Review NASA-standard action plans and step-by-step verification directives.
 
-### 3. Production Rigor & Engineering Excellence (Score: 10/10)
-* **Deterministic Aerospace Physics:** Real non-linear equations for solar flux, eclipse geometry, Peukert battery capacity curves, and 4-crew consumable burn rates ($19.2\text{ kg/day}$).
-* **Enterprise Security:** RS256 Auth0 JWT authentication with automatic cross-identity account resolution (Google OAuth + Email/Password unified).
-* **High-Resiliency Backend:** Dual-pass AI fallbacks, parameterized Supabase database queries, sanitized file uploads (20 MB limit), and dynamic CORS whitelisting.
+### Step 4: Test the Deterministic Scenario Lab
+Navigate to `/scenario-lab` and stress-test mission trade-offs using real non-linear aerospace physics equations:
+- Click quick presets (e.g. **`Solar Blackout -45%`**, **`Duration +180 Days`**, or **`35-Min Comms Lag`**) or adjust physics sliders.
+- Observe real-time **Cascading Fault Trees** and automated **NASA-STD-3001** life-support alerts trigger with engineering countermeasures.
 
----
-
-## 🎬 3-Minute Judge Walkthrough Flow
-
-If you are evaluating the platform live or watching the submission video, follow this 3-step sequence:
-
-```mermaid
-flowchart LR
-    A["1. Create Mission\n(Upload Dossier / Natural Language)"] --> B["2. Mission Analysis\n(Topological Twin & Telemetry Strip)"]
-    B --> C["3. Scenario Lab\n(What-If Simulation & Fault Trees)"]
-```
-
-### Step 1: Ingest Flight Specs (`/missions/create`)
-1. Click **New Mission** in the top navigation bar.
-2. Upload a mission dossier (or paste flight requirements into the description box).
-3. Click **Create Mission** — the system extracts baseline parameters (duration, trajectory, solar flux, communications) and synthesizes the digital twin.
-
-### Step 2: Mission Analysis Cockpit (`/analysis`)
-1. View the **Interactive Orbital Topological Map**: Hover over coupled subsystems (Power, Life Support, Thermal, Comms) to trace live causal pathways.
-2. Inspect the **6-Channel Verified Telemetry Strip** displaying real extracted facts and verification directives.
-3. Review the **Flight Operations Action Plan** synthesized into milestone roadmaps.
-
-### Step 3: Scenario Lab Trade-Off Engine (`/scenario-lab`)
-1. Open **Scenario Lab** to run what-if stress tests.
-2. Adjust simulation sliders or click quick-presets (e.g. *Solar Blackout -45%*, *Duration Expansion +180 Days*, or *35-Minute Comms Lag*).
-3. Observe **Cascading Fault Trees** and automated **NASA-STD-3001** alerts trigger in real time with recommended engineering countermeasures.
-
----
-
-## 💻 Tech Stack Summary
-
-* **Frontend:** Next.js 14, React 19, TypeScript, Vanilla CSS + Tailwind CSS, Custom SVG Orbital Graph
-* **Backend:** FastAPI (Python 3.11+), Uvicorn, Pydantic v2, PyPDF2, python-docx
-* **AI & NLP:** IBM watsonx.ai Granite 3.0 (`ibm/granite-3-3-8b-instruct`), OpenAI GPT-4o verification fallback
-* **Database & Storage:** Supabase PostgreSQL (RLS enabled), Supabase Storage Buckets
-* **Authentication:** Auth0 (RS256 JWT validation with automatic account linking)
-
----
-
-## 📬 Contact & Team
-
-* **Author / Builder:** Kazi Rahimu Islam
-* **Repository:** [https://github.com/TasinKazi/EnPlanIt](https://github.com/TasinKazi/EnPlanIt)
-* **License:** Apache License 2.0
+### Step 5: Test Multi-Role Cockpit Views & Safety Clearances
+Click the role badge in the top navigation bar to switch between **Mission Controller** and **Mission Risk & Safety Analyst** to inspect tailored flight clearances and subsystem safety margins with zero data loss!
