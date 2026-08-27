@@ -175,9 +175,6 @@ function DashboardContent() {
                       <span className="font-medium text-[var(--text-primary)] group-hover:text-sky-300 transition-colors">
                         {m.name}
                       </span>
-                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-[var(--text-muted)] border border-white/10 group-hover:border-sky-500/40">
-                        Inspect 🔍
-                      </span>
                     </div>
                     <div className="text-[10px] font-mono text-[var(--text-muted)] mt-0.5 line-clamp-1 max-w-xs group-hover:text-slate-300">
                       {m.description || "No description provided"}
