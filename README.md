@@ -1,18 +1,14 @@
-<div align="left">
-  <img src="frontend/public/logo.png" alt="EnPlanIt Logo" width="96" height="96" />
+<div align="center">
+  <img src="./frontend/public/logo.png" alt="EnPlanIt Logo" width="96" height="96" />
   <h1>ENPLANIT</h1>
   <p><strong>Enlighten your mission. Plan it to perfection.</strong></p>
 </div>
 
-<p align="left">
-  <a href="https://youtu.be/your-demo-video">Watch the 3-minute demo</a> ·
-  <a href="https://enplanit.vercel.app">Try the live demo</a> ·
-  <a href="./JUDGE.md">Judge's Quick Guide</a>
-</p>
+EnPlanIt is a unified aerospace mission intelligence and scenario simulation platform for mission architects, systems engineers, mission risk and safety analysts, flight operations teams, and space exploration enthusiasts. It transforms mission concepts and uploaded flight dossiers into structured mission profiles, interactive subsystem maps, milestone roadmaps, and deterministic what-if simulations.
 
-EnPlanIt is a unified aerospace mission intelligence and scenario simulation platform built for mission architects, systems engineers, and flight operations teams. When an aerospace engineer uploads flight specifications, mission dossiers, proposals, or telemetry briefs (PDF, DOCX, TXT, MD up to 3 files / 5,000 characters), EnPlanIt processes the material using **IBM watsonx.ai Granite 3.0**, extracting verified telemetry channels, synthesizing milestone roadmaps, and constructing an interactive topological orbital digital twin. In the **Scenario Lab**, engineers stress-test mission trade-offs (solar blackouts, duration expansions, communication delays) using non-linear physics and evaluate real-time cascading fault trees against **NASA-STD-3001** safety standards.
+> **Built for the IBM AI Builders Challenge (August 2026, Mission Beyond Earth: Space Exploration).**
 
-> **Built for the IBM AI Builders Challenge (August 2026 — Mission Beyond Earth: Space Exploration).**
+[Try the live demo](https://enplanit.vercel.app) · [Judge's Quick Guide](./JUDGE.md)
 
 ---
 
@@ -20,154 +16,225 @@ EnPlanIt is a unified aerospace mission intelligence and scenario simulation pla
 
 | Section | Description |
 | :--- | :--- |
-| **What** | Ingests multi-document spaceflight dossiers (PDF, Word, TXT, MD up to 5,000 characters) and synthesizes verified orbital telemetry, topological digital twins, and deterministic scenario simulations in under 30 seconds. |
-| **Why it's different** | Standard AI tools produce generic, non-validated text summaries with hallucinations. EnPlanIt enforces deterministic aerospace physics equations (Peukert battery non-linear discharge, inverse square solar flux) and checks cascading fault trees against real NASA-STD-3001 safety constraints. |
-| **Who it's for** | Aerospace mission architects, flight operations engineers, systems designers, and space exploration teams. |
-| **Full-Source Ingestion** | Ingests up to 3 files simultaneously with precursor vs. active flight spec disambiguation, processing up to 5,000 characters with zero tail-end drop-off. |
-| **Dual-AI Verification Pipeline** | Leverages **IBM Granite 3.0** via watsonx.ai for parameter extraction and constraint mapping, paired with secondary verification models to eliminate hallucinations. |
-| **Deterministic Simulation** | Stress-test battery depth-of-discharge, thermal radiator wear, communication latency windows, and 4-crew consumable burn budgets ($19.2\text{ kg/day}$). |
-| **Built with** | **IBM Granite 3.0 (watsonx.ai)** · **IBM Bob** · **Next.js 14** · **FastAPI (Python 3.11)** · **Supabase PostgreSQL & Storage** · **Auth0 (RS256)** · **TypeScript** |
+| **What** | Converts mission concepts and supporting documents into structured mission intelligence, interactive subsystem maps, roadmaps, and scenario simulations. |
+| **Why it is different** | Combines AI-assisted information extraction with deterministic calculations, allowing users to explore subsystem consequences without relying on AI-generated numbers alone. |
+| **Who it is for** | Mission architects, systems engineers, mission risk and safety analysts, flight operations teams, and space exploration enthusiasts. |
+| **Document support** | Accepts up to three PDF, DOCX, TXT, or Markdown files, with a maximum size of 20 MB per file. The current prototype uses an analysis context of up to 5,000 extracted characters where applicable. |
+| **Verification pipeline** | Uses IBM Granite through watsonx.ai for initial extraction and can apply a secondary AI cross-check designed to reduce unsupported or incorrectly extracted values. |
+| **Scenario simulation** | Evaluates changes involving power availability, battery reserves, mission duration, communication delay, crew resources, and environmental constraints. |
+| **Built with** | **IBM Granite on watsonx.ai** · **IBM Bob** · **OpenAI (optional verifier)** · **Next.js 16** · **React 19** · **Tailwind CSS v4** · **FastAPI** · **Supabase** · **Auth0** · **TypeScript** · **Python** |
 
 ---
 
 ## The problem
 
-Space mission architecture documents are dense, multidisciplinary, and notoriously difficult to cross-reference under operational time constraints. A single change in orbital illumination or flight duration cascades across electrical microgrids, thermal radiator degradation, life-support consumable burn rates, and ground communication windows. 
+Space mission documentation is dense, multidisciplinary, and distributed across proposals, flight specifications, telemetry briefs, safety requirements, and operational plans. A change to one mission parameter can affect several connected systems. Reduced solar exposure can influence power generation and battery reserves, while a longer mission can alter crew consumables, radiation exposure, maintenance needs, and communication planning.
 
-Currently, engineering teams rely on siloed spreadsheets, legacy telemetry tools, and manual calculations. When unexpected anomalies occur or trade-offs must be evaluated, tracing downstream subsystem consequences takes days. Traditional generic LLMs hallucinate critical aerospace numbers and lack understanding of non-linear space physics. The space industry requires a unified cognitive cockpit that ingests raw flight dossiers, extracts verified facts, and simulates cascading subsystem risks deterministically.
+These relationships are often reviewed through separate documents, spreadsheets, and specialized tools. General-purpose AI assistants can summarize documents, but summaries alone do not provide a structured model of mission dependencies or a reliable method for calculating downstream effects. Mission teams need a faster way to organize source material, identify missing parameters, visualize subsystem relationships, and test proposed changes.
 
 ---
 
 ## The solution
 
-EnPlanIt provides an end-to-end cognitive toolchain for modern space exploration:
-
-```
-Mission Dossier Upload (PDF, DOCX, TXT, MD up to 5,000 chars)
-                           │
-                           ▼
-Parameter Extraction & Synthesis (IBM Granite 3.0 on watsonx.ai)
-                           │
-                           ▼
-Interactive Mission Digital Twin (Topological Orbital Dependency Graph)
-                           │
-                           ▼
-Scenario Lab Simulation Engine (Deterministic Peukert Physics & NASA-STD-3001)
-                           │
-                           ▼
-      Cascading Subsystem Fault Trees & Engineering Countermeasures
-```
-
-### The 3 Core Intelligence Engines
-
-1. 🚀 **Create Mission & Ingestion:** Upload multi-file flight specifications or describe mission concepts in natural language. EnPlanIt automatically parses up to 5,000 characters of architecture, extracts baseline parameters, and synthesizes the digital twin.
-2. 🧠 **Mission Analysis Cockpit:** Deep mission overview featuring interactive topological orbital digital twins, 6 verified telemetry channels, and comprehensive NASA-standard flight roadmaps with step-by-step verification directives.
-3. ⚡ **Scenario Lab:** Stress-test mission parameters with deterministic aerospace physics models. Simulate solar blackouts, duration expansions, and communication delays with real-time cascading fault trees and NASA safety standards.
-
----
-
-## Technical Architecture
+EnPlanIt provides an integrated workflow for transforming mission documentation into explorable mission intelligence.
 
 ```mermaid
 flowchart TD
-    subgraph Client ["Client Layer (Next.js 14 App Router & React 19)"]
-        UI["Tailwind CSS & Glassmorphism Cockpit UI"]
-        Auth0Client["Auth0 Universal Login & Session Auth"]
-        GraphView["Interactive Orbital SVG Topology Graph"]
-        SimControls["Scenario Lab Physics & Slider Controls"]
-    end
+    A["Mission concept or uploaded dossier"]
+    B["Document extraction and fact classification"]
+    C["IBM Granite mission synthesis"]
+    D["Interactive subsystem map"]
+    E["Deterministic scenario simulation"]
+    F["Risk pathways and investigation steps"]
 
-    subgraph API ["Backend API Gateway (FastAPI & Python 3.11)"]
-        Auth0Middleware["RS256 JWT Auth & Canonical Identity Resolver"]
-        DocRouter["/api/missions/documents (Extractor & Chunker)"]
-        MissionRouter["/api/missions (CRUD & Synthesis)"]
-        ScenarioRouter["/api/scenarios (Deterministic Simulation Engine)"]
-        AnalysisRouter["/api/analysis (Topological Graph Generator)"]
-    end
-
-    subgraph AI ["AI & Inference Pipeline"]
-        Granite["IBM Granite 3.0 (watsonx.ai Parameter Extraction)"]
-        Verifier["Dual-Pass Aerospace Constraint Verifier"]
-    end
-
-    subgraph Storage ["Persistence & Storage"]
-        SupabaseDB[("Supabase PostgreSQL DB (RLS Protected)")]
-        SupabaseStorage["Supabase Storage (Mission Documents & Branding)"]
-    end
-
-    UI --> Auth0Client
-    UI --> GraphView
-    UI --> SimControls
-    Auth0Client --> Auth0Middleware
-    UI --> DocRouter
-    UI --> MissionRouter
-    UI --> ScenarioRouter
-    UI --> AnalysisRouter
-
-    DocRouter --> SupabaseStorage
-    DocRouter --> Granite
-    MissionRouter --> Granite
-    Granite --> Verifier
-    Verifier --> SupabaseDB
-    ScenarioRouter --> SupabaseDB
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
 ```
 
----
+### Three core intelligence engines
 
-## How IBM Bob Was Used
+1. **Mission Creation and Ingestion:** Users can describe a mission concept in natural language or upload supporting PDF, DOCX, TXT, and Markdown documents. EnPlanIt extracts relevant mission facts, identifies unspecified information, and constructs a structured mission profile.
 
-**IBM Bob** was utilized as the primary AI pair-programming partner and systems architect throughout the development lifecycle of EnPlanIt:
+2. **Mission Analysis Cockpit:** The cockpit presents mission parameters, milestone roadmaps, verified and unverified telemetry channels, subsystem relationships, and an interactive orbital dependency map.
 
-* **Dual-AI Pipeline Design:** Architected the parameter ingestion pipeline using **IBM Granite 3.0** (`ibm/granite-3-3-8b-instruct`) on watsonx.ai to parse up to 5,000 characters of raw aerospace documentation into structured telemetry facts.
-* **Deterministic Aerospace Physics Modeling:** Implemented non-linear equations for Peukert battery capacity retention, orbital eclipse geometries, inverse square solar irradiance, and 4-crew NASA-STD-3001 consumable budgets.
-* **Multi-Identity Account Linking:** Engineered backend automatic identity resolution in `backend/auth0.py` to seamlessly unify Google OAuth and Email/Password users under their primary mission workspace.
-* **Resilient Cloud Storage Architecture:** Designed chunked multi-file document extraction supporting PDF, DOCX, TXT, and Markdown files up to 20 MB with isolated Supabase Storage paths.
+3. **Scenario Lab:** Users can change mission conditions such as solar availability, mission duration, power demand, or communication delay. EnPlanIt applies deterministic calculations and displays affected subsystems, cascading risks, and recommended investigation steps.
 
 ---
 
-## Develop
+## What makes EnPlanIt different
+
+### AI-assisted extraction with deterministic analysis
+
+EnPlanIt uses AI to organize unstructured mission information, but scenario calculations are handled separately through explicit engineering logic. This separation reduces the risk of presenting an AI-generated estimate as a calculated result.
+
+### Interactive mission dependency model
+
+Instead of returning only a narrative summary, EnPlanIt creates an explorable subsystem map that connects mission conditions, power, communications, crew, constraints, and resources.
+
+### Source-aware mission facts
+
+Mission facts can retain their source document, page reference, confidence state, and verification status. Missing or unsupported values are presented as planning gaps rather than silently treated as confirmed facts.
+
+### Cascading scenario consequences
+
+The Scenario Lab shows how one change can propagate through multiple mission systems. Users can compare baseline and modified conditions while reviewing risk pathways and potential countermeasures.
+
+---
+
+## Technical architecture
+
+```mermaid
+flowchart TD
+    subgraph Client["Client layer: Next.js 16 and React 19"]
+        UI["Mission cockpit UI"]
+        AuthClient["Auth0 session authentication"]
+        Visuals["Orbital map and scenario controls"]
+    end
+
+    subgraph API["API layer: FastAPI and Python"]
+        AuthAPI["JWT and identity resolution"]
+        MissionAPI["Mission and document routes"]
+        AnalysisAPI["Analysis and scenario routes"]
+    end
+
+    subgraph Intelligence["Intelligence layer"]
+        Granite["IBM Granite on watsonx.ai"]
+        Verifier["Optional secondary cross-check"]
+        Physics["Deterministic scenario engine"]
+    end
+
+    subgraph Data["Data layer"]
+        Database[("Supabase PostgreSQL")]
+        Storage["Supabase Storage"]
+    end
+
+    UI --> AuthClient
+    UI --> Visuals
+    AuthClient --> AuthAPI
+    UI --> MissionAPI
+    UI --> AnalysisAPI
+    MissionAPI --> Granite
+    Granite --> Verifier
+    AnalysisAPI --> Physics
+    MissionAPI --> Database
+    AnalysisAPI --> Database
+    MissionAPI --> Storage
+```
+
+### Architecture breakdown
+
+| Layer | Responsibility |
+| :--- | :--- |
+| **Frontend** | Next.js App Router interface, mission dashboards, document uploads, authentication flows, orbital visualizations, and scenario controls. |
+| **Backend** | FastAPI routes for missions, documents, analysis, insights, profiles, authentication, and deterministic scenario calculations. |
+| **AI pipeline** | IBM Granite on watsonx.ai performs mission parameter extraction and synthesis. When configured, a secondary model can cross-check the preliminary extraction. |
+| **Data and storage** | Supabase PostgreSQL stores application data, while Supabase Storage manages uploaded mission documents. |
+| **Authentication** | Auth0 provides session authentication, while backend identity-resolution logic connects authenticated users to their EnPlanIt workspaces. |
+
+---
+
+## Repository structure
+
+| Path | Purpose |
+| :--- | :--- |
+| `frontend/app/` | Next.js pages, layouts, authentication routes, dashboards, mission creation, analysis, and Scenario Lab. |
+| `frontend/components/` | Shared interface components, mission visualizations, navigation, document tools, and scenario displays. |
+| `frontend/lib/` | Frontend API clients, authentication helpers, and shared application logic. |
+| `frontend/public/` | Logos, banner artwork, and other static assets. |
+| `backend/routers/` | FastAPI endpoints for missions, documents, analysis, scenarios, authentication, profiles, and insights. |
+| `backend/ai_client.py` | AI-provider configuration, Granite requests, fallback behavior, extraction, and verification logic. |
+| `backend/document_extractor.py` | Text extraction and normalization for supported document formats. |
+| `api/index.py` | Vercel serverless entry point for the FastAPI application. |
+| `supabase/schema.sql` | Database schema and supporting Supabase configuration. |
+| `JUDGE.md` | Condensed project guide for challenge reviewers. |
+
+---
+
+## How IBM Bob was used
+
+IBM Bob served as an AI pair-programming partner and systems-design assistant throughout the development of EnPlanIt.
+
+- **AI Pipeline Architecture:** Helped design the mission-parameter extraction flow using IBM Granite on watsonx.ai, structured JSON outputs, and an optional second-pass cross-check.
+
+- **Deterministic Scenario Modeling:** Supported the implementation of explicit calculations for battery reserves, solar availability, communication delay, mission duration, radiation exposure, and crew-resource planning.
+
+- **Mission Dependency Visualization:** Assisted with the interactive orbital map and the representation of relationships between power, communications, crew, constraints, resources, and mission objectives.
+
+- **Authentication and Identity Resolution:** Helped develop backend logic that connects Auth0 identities and preserves access to the correct mission workspace across supported sign-in methods.
+
+- **Document and Storage Workflow:** Supported multi-document extraction, Supabase Storage integration, file validation, and isolated document paths.
+
+- **Interface Development and Debugging:** Assisted with the Next.js cockpit interface, responsive styling, API integration, debugging, and deployment preparation.
+
+---
+
+## Local development
 
 ### Prerequisites
-- Node.js 18+ & npm
-- Python 3.11+
-- Supabase Project & Auth0 Tenant
+
+- Node.js 20.9 or later
+- npm
+- Python 3.11 or later
+- A Supabase project
+- An Auth0 tenant
+- IBM watsonx.ai credentials
+- An OpenAI API key if the optional secondary verification stage is enabled
 
 ### 1. Clone the repository
+
 ```bash
-git clone https://github.com/TasinKazi/EnPlanIt.git
-cd EnPlanIt
+git clone https://github.com/TasinKazi/AstroOps.git
+cd AstroOps
 ```
 
-### 2. Configure Environment Variables
-Copy the template and provide your API keys:
-```bash
-# Backend .env
-cp .env.example backend/.env
+### 2. Configure environment variables
 
-# Frontend .env.local
+Copy the unified environment template into the backend and frontend locations:
+
+```bash
+cp .env.example backend/.env
 cp .env.example frontend/.env.local
 ```
 
-### 3. Setup and Run Backend (FastAPI)
+Update both files with the credentials and URLs required by your environment. Never commit populated environment files or secrets.
+
+### 3. Start the FastAPI backend
+
+Open a terminal from the repository root:
+
 ```bash
 cd backend
-python3 -m venv venv
-source venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
 
-### 4. Setup and Run Frontend (Next.js)
+The backend runs at `http://localhost:8000`. FastAPI documentation is available at `http://localhost:8000/docs` when enabled.
+
+### 4. Start the Next.js frontend
+
+Open a second terminal from the repository root:
+
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
-Visit **`http://localhost:3000`** in your browser.
+Open `http://localhost:3000` in your browser.
+
+---
+
+## Prototype notice
+
+EnPlanIt is a challenge prototype intended for mission-planning exploration, education, and scenario analysis. It is not a certified aerospace engineering or flight-safety system. Its outputs should be independently verified before they are used in operational, safety-critical, or mission-critical decisions.
 
 ---
 
 ## License
 
-This project is licensed under the Apache 2.0 License - see the [LICENSE](./LICENSE) file for details.
+This project is licensed under the Apache License 2.0. See [LICENSE](./LICENSE) for details.
