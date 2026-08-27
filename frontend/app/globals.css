@@ -1,0 +1,223 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   EnPlanIt Design System
+   Single monospace-anchored type scale used across the entire application.
+   Hierarchy is achieved through size, weight, letter-spacing, and opacity —
+   not by mixing multiple font families.
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ── Color tokens ──────────────────────────────────────────────────────── */
+  --bg-space:       #080c18;
+  --bg-panel:       #0d1525;
+  --bg-card:        #111c33;
+  --border:         #1a2844;
+  --border-bright:  #243a60;
+  --text-primary:   #dce8f8;
+  --text-muted:     #6e85a8;
+  --accent:         #3b82f6;
+  --accent-glow:    #60a5fa;
+  --accent-dim:     #1d4ed8;
+  --cyan:           #06b6d4;
+  --green:          #10b981;
+  --amber:          #f59e0b;
+  --red:            #ef4444;
+  --purple:         #8b5cf6;
+
+  /* Translucent glass surfaces */
+  --bg-card-glass:  rgba(10, 17, 36, 0.70);
+  --bg-panel-glass: rgba(8,  13, 28, 0.76);
+
+  /* ── Typography ────────────────────────────────────────────────────────── */
+  /*  One font stack: monospace / technical sans.
+      "JetBrains Mono" loads via next/font if added; falls back gracefully.  */
+  --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code",
+               ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-ui:   var(--font-mono);
+
+  /* Size scale — use these everywhere instead of ad-hoc values */
+  --text-2xs:  0.625rem;   /* 10px — status tags, monospace labels        */
+  --text-xs:   0.6875rem;  /* 11px — secondary labels, table cells        */
+  --text-sm:   0.75rem;    /* 12px — body copy, card text                 */
+  --text-base: 0.875rem;   /* 14px — default body                         */
+  --text-lg:   1rem;       /* 16px — subsection headings                  */
+  --text-xl:   1.125rem;   /* 18px — section headings                     */
+  --text-2xl:  1.375rem;   /* 22px — page headings                        */
+  --text-3xl:  1.75rem;    /* 28px — major headings                       */
+  --text-hero: 3rem;       /* 48px — homepage H1                          */
+
+  /* Letter-spacing tokens */
+  --ls-tight:   -0.01em;
+  --ls-normal:   0em;
+  --ls-wide:     0.05em;
+  --ls-wider:    0.08em;
+  --ls-widest:   0.14em;
+
+  /* Line-height tokens */
+  --lh-tight:  1.25;
+  --lh-normal: 1.5;
+  --lh-relaxed:1.7;
+}
+
+/* ─── Reset ──────────────────────────────────────────────────────────────── */
+* { box-sizing: border-box; }
+
+html {
+  background-color: var(--bg-space);
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
+}
+
+body {
+  background-color: var(--bg-space);
+  color:            var(--text-primary);
+  font-family:      var(--font-ui);
+  font-size:        var(--text-base);
+  line-height:      var(--lh-normal);
+  min-height:       100vh;
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
+  /* No position:relative needed — canvas is now fixed, not absolute */
+  /* Sharper monospace rendering */
+  -webkit-font-smoothing:  antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "kern" 1, "liga" 0, "calt" 1;
+}
+
+/* Page content sits above the fixed canvas (z-index 0) */
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Typography helpers ─────────────────────────────────────────────────── */
+
+/* Monospace label — the universal UI label style across the whole app */
+.label-mono {
+  font-family:    var(--font-mono);
+  font-size:      var(--text-2xs);
+  font-weight:    600;
+  letter-spacing: var(--ls-widest);
+  text-transform: uppercase;
+  color:          var(--text-muted);
+}
+
+.label-mono-sm {
+  font-family:    var(--font-mono);
+  font-size:      0.55rem;
+  font-weight:    600;
+  letter-spacing: var(--ls-widest);
+  text-transform: uppercase;
+  color:          var(--text-muted);
+}
+
+/* HUD value — large numeric readouts */
+.hud-value {
+  font-family:    var(--font-mono);
+  font-weight:    800;
+  letter-spacing: var(--ls-tight);
+  color:          var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Section divider accent line */
+.section-rule {
+  display:          inline-block;
+  width:            2rem;
+  height:           1px;
+  background-color: var(--accent);
+  vertical-align:   middle;
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar          { width: 5px; }
+::-webkit-scrollbar-track    { background: var(--bg-panel); }
+::-webkit-scrollbar-thumb    { background: var(--border-bright); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-dim); }
+
+/* ─── Scanline overlay ───────────────────────────────────────────────────── */
+.scanlines::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.022) 2px,
+    rgba(0, 0, 0, 0.022) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ─── Fallback grid (painted on canvas; this is the SSR/no-JS fallback) ─── */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(59,130,246,0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59,130,246,0.022) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ─── Glass / HUD surfaces ───────────────────────────────────────────────── */
+
+/* Standard glass card — let space environment bleed through */
+.card-glass {
+  background-color: var(--bg-card-glass) !important;
+  backdrop-filter:  blur(12px) saturate(1.08);
+  -webkit-backdrop-filter: blur(12px) saturate(1.08);
+  border-color:     var(--border) !important;
+}
+
+/* Lighter glass panel */
+.panel-glass {
+  background-color: var(--bg-panel-glass) !important;
+  backdrop-filter:  blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* NavBar — deepest glass */
+header.space-header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 9999 !important;
+  background-color: rgba(6, 10, 22, 0.92) !important;
+  backdrop-filter: blur(16px) saturate(1.15);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+}
+
+.account-dropdown-menu {
+  position: absolute !important;
+  right: 0 !important;
+  top: calc(100% + 8px) !important;
+  width: 15.5rem !important;
+  background-color: #080f20 !important;
+  border: 1px solid var(--border-bright) !important;
+  border-radius: 0.875rem !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.95), 0 0 24px rgba(59, 130, 246, 0.25) !important;
+  z-index: 99999 !important;
+  overflow: hidden !important;
+}
+
+/* Thin glowing border accent used on hover / active cards */
+.border-glow-accent {
+  box-shadow: 0 0 0 1px var(--accent), 0 0 12px rgba(59,130,246,0.18);
+}
+
+/* ─── Focus ring — accessible, on-brand ─────────────────────────────────── */
+:focus-visible {
+  outline: 1.5px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration:        0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration:       0.01ms !important;
+  }
+}

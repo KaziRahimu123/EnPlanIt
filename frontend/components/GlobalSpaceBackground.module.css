@@ -1,0 +1,60 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   GlobalSpaceBackground — fixed full-viewport animated space environment.
+   Canvas handles stars+dust. CSS handles grid + atmospheric glows.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.background {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  background: #020611;
+  overflow: hidden;
+}
+
+/* ── Full-viewport canvas — stars drawn here by JS ───────────────────────── */
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ── Faint celestial grid ────────────────────────────────────────────────── */
+.grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.045;
+  background-image:
+    linear-gradient(rgba(60, 130, 220, 0.22) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(60, 130, 220, 0.22) 1px, transparent 1px);
+  background-size: 120px 120px;
+}
+
+/* ── Soft atmospheric glows ──────────────────────────────────────────────── */
+.glowOne,
+.glowTwo {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+}
+
+.glowOne {
+  width: 520px;
+  height: 520px;
+  right: 8%;
+  top: 32%;
+  background: rgba(0, 145, 255, 0.05);
+}
+
+.glowTwo {
+  width: 480px;
+  height: 480px;
+  left: 10%;
+  bottom: 12%;
+  background: rgba(75, 65, 190, 0.04);
+}

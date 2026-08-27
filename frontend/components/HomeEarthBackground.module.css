@@ -1,0 +1,272 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   HomeEarthBackground — scoped styles
+   Renders inside the hero section only. Earth is a separate image layer
+   positioned mostly below the hero so only the upper curved horizon is visible.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ── Outermost wrapper fills the hero ───────────────────────────────────── */
+.spaceScene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Deep-space radial glow behind the hero title ───────────────────────── */
+.spaceGlow {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 56vw;
+  height: 56vw;
+  max-width: 680px;
+  max-height: 680px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(40, 100, 220, 0.060) 0%,
+    rgba(20,  60, 160, 0.028) 40%,
+    transparent 70%
+  );
+}
+
+/* ── Stars ───────────────────────────────────────────────────────────────── */
+/* Generated via repeating radial-gradient to avoid extra image requests.    */
+.stars {
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat;
+}
+
+.starsFar {
+  background-image:
+    radial-gradient(0.6px 0.6px at  8%  12%, rgba(255,255,255,0.22) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 23%  34%, rgba(255,255,255,0.16) 0%, transparent 100%),
+    radial-gradient(0.6px 0.6px at 41%   7%, rgba(255,255,255,0.20) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 57%  42%, rgba(255,255,255,0.14) 0%, transparent 100%),
+    radial-gradient(0.6px 0.6px at 72%  18%, rgba(255,255,255,0.18) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 88%   5%, rgba(255,255,255,0.20) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 15%  58%, rgba(255,255,255,0.14) 0%, transparent 100%),
+    radial-gradient(0.6px 0.6px at 33%  71%, rgba(255,255,255,0.18) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 64%  66%, rgba(255,255,255,0.15) 0%, transparent 100%),
+    radial-gradient(0.6px 0.6px at 79%  80%, rgba(255,255,255,0.19) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 92%  52%, rgba(255,255,255,0.13) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at  4%  88%, rgba(255,255,255,0.17) 0%, transparent 100%),
+    radial-gradient(0.6px 0.6px at 48%  92%, rgba(255,255,255,0.21) 0%, transparent 100%),
+    radial-gradient(0.5px 0.5px at 96%  91%, rgba(255,255,255,0.15) 0%, transparent 100%);
+  background-size: 320px 280px;
+  opacity: 0.9;
+  animation: driftFar 90s linear infinite;
+}
+
+.starsMid {
+  background-image:
+    radial-gradient(0.9px 0.9px at 11%  19%, rgba(255,255,255,0.32) 0%, transparent 100%),
+    radial-gradient(0.8px 0.8px at 28%  44%, rgba(200,220,255,0.28) 0%, transparent 100%),
+    radial-gradient(1.0px 1.0px at 53%  11%, rgba(255,255,255,0.35) 0%, transparent 100%),
+    radial-gradient(0.8px 0.8px at 69%  55%, rgba(200,220,255,0.26) 0%, transparent 100%),
+    radial-gradient(0.9px 0.9px at 84%  28%, rgba(255,255,255,0.30) 0%, transparent 100%),
+    radial-gradient(0.8px 0.8px at  7%  73%, rgba(200,220,255,0.24) 0%, transparent 100%),
+    radial-gradient(1.0px 1.0px at 37%  82%, rgba(255,255,255,0.33) 0%, transparent 100%),
+    radial-gradient(0.9px 0.9px at 77%  90%, rgba(200,220,255,0.27) 0%, transparent 100%),
+    radial-gradient(0.8px 0.8px at 95%  40%, rgba(255,255,255,0.29) 0%, transparent 100%);
+  background-size: 440px 380px;
+  opacity: 0.8;
+  animation: driftMid 140s linear infinite;
+}
+
+.starsNear {
+  background-image:
+    radial-gradient(1.3px 1.3px at 18%  24%, rgba(255,255,255,0.45) 0%, transparent 100%),
+    radial-gradient(1.1px 1.1px at 44%  61%, rgba(220,235,255,0.42) 0%, transparent 100%),
+    radial-gradient(1.4px 1.4px at 67%  14%, rgba(255,255,255,0.48) 0%, transparent 100%),
+    radial-gradient(1.2px 1.2px at 82%  78%, rgba(220,235,255,0.40) 0%, transparent 100%),
+    radial-gradient(1.1px 1.1px at  3%  47%, rgba(255,255,255,0.38) 0%, transparent 100%),
+    radial-gradient(1.3px 1.3px at 91%  35%, rgba(220,235,255,0.44) 0%, transparent 100%);
+  background-size: 600px 500px;
+  opacity: 0.7;
+  animation: driftNear 200s linear infinite;
+}
+
+@keyframes driftFar  { from { background-position: 0 0; } to { background-position: 320px 0; } }
+@keyframes driftMid  { from { background-position: 0 0; } to { background-position: 440px 0; } }
+@keyframes driftNear { from { background-position: 0 0; } to { background-position: 600px 0; } }
+
+/* ── Orbital trajectory paths ────────────────────────────────────────────── */
+.orbit {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid transparent;
+  pointer-events: none;
+}
+
+.orbitOne {
+  width: 54vw;
+  height: 18vw;
+  border-color: rgba(59, 130, 246, 0.075);
+  border-style: dashed;
+  border-width: 0.5px;
+  transform: translate(-50%, -50%) rotate(12deg);
+  border-image: none;
+}
+
+.orbitTwo {
+  width: 78vw;
+  height: 25vw;
+  border-color: rgba(59, 130, 246, 0.050);
+  border-style: dashed;
+  border-width: 0.5px;
+  transform: translate(-50%, -50%) rotate(-7deg);
+}
+
+.orbitThree {
+  width: 38vw;
+  height: 12vw;
+  border-color: rgba(220, 100, 40, 0.042);
+  border-style: dashed;
+  border-width: 0.5px;
+  transform: translate(-50%, -50%) rotate(-18deg);
+}
+
+/* ── Waypoint dot ────────────────────────────────────────────────────────── */
+.waypoint {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(96, 165, 250, 0.65);
+  box-shadow: 0 0 6px 2px rgba(96, 165, 250, 0.30);
+  top: calc(50% - 9vw);
+  left: calc(50% + 27vw);
+  animation: orbitWaypoint 28s linear infinite;
+}
+
+@keyframes orbitWaypoint {
+  0%   { transform: translate(0, 0)        scale(1.0); opacity: 0.65; }
+  25%  { transform: translate(-54vw, 9vw)  scale(0.8); opacity: 0.40; }
+  50%  { transform: translate(0, 18vw)     scale(1.0); opacity: 0.65; }
+  75%  { transform: translate(54vw, 9vw)   scale(0.8); opacity: 0.40; }
+  100% { transform: translate(0, 0)        scale(1.0); opacity: 0.65; }
+}
+
+/* ── Earth wrapper ───────────────────────────────────────────────────────── */
+.earthWrapper {
+  position: absolute;
+  left: 50%;
+  width: 135vw;
+  height: 135vw;
+  bottom: -108vw;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 85%);
+}
+
+/* ── Earth image ─────────────────────────────────────────────────────────── */
+.earth {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 50%;
+  filter:
+    brightness(0.75)
+    contrast(1.25)
+    saturate(1.15);
+}
+
+/* ── Atmospheric rim on Earth ────────────────────────────────────────────── */
+.atmosphere {
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  box-shadow:
+    0 -3px  6px  rgba(180, 230, 255, 0.95),
+    0 -8px  20px rgba(56,  168, 255, 0.75),
+    0 -18px 45px rgba(20,  100, 240, 0.45);
+}
+
+/* ── Bottom gradient overlay — blends Earth seamlessly into deep space ───── */
+.bottomFade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 260px;
+  background: linear-gradient(
+    to bottom,
+    rgba(6, 10, 22, 0) 0%,
+    rgba(6, 10, 22, 0.4) 40%,
+    rgba(6, 10, 22, 0.85) 75%,
+    #060a16 100%
+  );
+  pointer-events: none;
+  z-index: 3;
+}
+
+/* ── Telemetry labels ────────────────────────────────────────────────────── */
+.telemetry {
+  position: absolute;
+  font-family: monospace;
+  font-size: 11px;
+  line-height: 1.8;
+  letter-spacing: 0.14em;
+  color: #60a5fa;
+  opacity: 0.55;
+  pointer-events: none;
+  white-space: pre;
+  text-transform: uppercase;
+}
+
+.telemetryLeft {
+  left: 4%;
+  top: 20%;
+}
+
+.telemetryRight {
+  right: 4%;
+  top: 20%;
+  text-align: right;
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .earthWrapper {
+    width: 175vw;
+    height: 175vw;
+    bottom: -115vw;
+  }
+
+  .telemetry {
+    display: none;
+  }
+
+  .orbitOne {
+    width: 150%;
+  }
+
+  .orbitTwo {
+    width: 125%;
+  }
+
+  .orbitThree {
+    width: 170%;
+  }
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .starsFar,
+  .starsMid,
+  .starsNear,
+  .waypoint {
+    animation: none;
+  }
+}

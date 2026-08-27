@@ -1,0 +1,328 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   HeroSpaceScene.module.css
+   All elements position:absolute inside .scene, which fills the hero section.
+   Hero section has overflow:hidden — Earth is clipped here, never bleeds below.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ── Scene container — fills the hero ───────────────────────────────────── */
+.scene {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+/* ── Coordinate grid SVG — fills scene ──────────────────────────────────── */
+.coordGrid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ── Soft blue glow centred behind the title ─────────────────────────────── */
+.centerGlow {
+  position: absolute;
+  top: 46%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(700px, 70vw);
+  height: min(700px, 70vw);
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(18, 65, 195, 0.13) 0%,
+    rgba(10, 42, 158, 0.06) 45%,
+    transparent 70%
+  );
+  z-index: 2;
+}
+
+/* ── Central navigation HUD ──────────────────────────────────────────────── */
+.hud {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  width: min(660px, 66vw);
+  height: min(660px, 66vw);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.hudRing {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border-style: solid;
+}
+
+.hudRingOuter {
+  width: 100%;
+  height: 100%;
+  border-width: 1px;
+  border-color: rgba(56, 160, 255, 0.30);
+}
+
+.hudRingMiddle {
+  width: 72%;
+  height: 72%;
+  border-width: 0.8px;
+  border-color: rgba(50, 152, 255, 0.22);
+}
+
+.hudRingInner {
+  width: 48%;
+  height: 48%;
+  border-width: 0.7px;
+  border-color: rgba(45, 148, 255, 0.16);
+}
+
+/* Crosshair axes */
+.hudAxisVertical {
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 0.5px;
+  height: 100%;
+  background: rgba(48, 145, 255, 0.10);
+}
+
+.hudAxisHorizontal {
+  position: absolute;
+  top: 50%; left: 0;
+  transform: translateY(-50%);
+  width: 100%;
+  height: 0.5px;
+  background: rgba(48, 145, 255, 0.09);
+}
+
+/* Heading marker triangle at top of outer ring */
+.headingMarker {
+  position: absolute;
+  top: 1.5%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left:   5px solid transparent;
+  border-right:  5px solid transparent;
+  border-bottom: 10px solid rgba(80, 175, 255, 0.48);
+}
+
+/* ── Degree scale — across the upper HUD arc ─────────────────────────────── */
+.degreeScale {
+  position: absolute;
+  top: calc(46% - min(330px, 33vw) - 14px);
+  left: 50%;
+  width: min(620px, 62vw);
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  letter-spacing: 0.07em;
+  color: rgba(72, 170, 255, 0.42);
+  user-select: none;
+  pointer-events: none;
+  z-index: 4;
+}
+
+/* ── Orbital trajectories — 3 CSS ellipses ───────────────────────────────── */
+.orbit {
+  position: absolute;
+  left: 50%;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Blue — wide, nearly-horizontal sweep */
+.orbitBlue {
+  width: 130%;
+  height: 55%;
+  top: 18%;
+  transform: translateX(-50%) rotate(-8deg);
+  border: 1px solid rgba(56, 168, 255, 0.28);
+  box-shadow: 0 0 8px 0 rgba(56, 168, 255, 0.08);
+  z-index: 2;
+}
+
+/* Cyan — slightly tighter, opposite tilt */
+.orbitCyan {
+  width: 118%;
+  height: 44%;
+  top: 24%;
+  transform: translateX(-50%) rotate(10deg);
+  border: 0.8px solid rgba(18, 205, 225, 0.22);
+  box-shadow: 0 0 6px 0 rgba(18, 205, 225, 0.07);
+  z-index: 2;
+}
+
+/* Mars orbit — orange, most inclined */
+.orbitMars {
+  width: 125%;
+  height: 48%;
+  top: 22%;
+  transform: translateX(-50%) rotate(22deg);
+  border: 0.8px solid rgba(255, 108, 42, 0.22);
+  box-shadow: 0 0 6px 0 rgba(255, 108, 42, 0.07);
+  z-index: 2;
+}
+
+
+/* ── Crosshair markers ────────────────────────────────────────────────────── */
+.crosshair {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.crosshair::before,
+.crosshair::after {
+  content: "";
+  position: absolute;
+  background: rgba(100, 170, 255, 0.24);
+}
+
+.crosshair::before {
+  top: 50%; left: 0;
+  width: 100%; height: 0.6px;
+  transform: translateY(-50%);
+}
+
+.crosshair::after {
+  left: 50%; top: 0;
+  height: 100%; width: 0.6px;
+  transform: translateX(-50%);
+}
+
+.crosshairLeft  { top: 26%; left: 8%; }
+.crosshairRight { top: 22%; right: 10%; }
+
+/* ── Telemetry labels ────────────────────────────────────────────────────── */
+.telemetryLeft,
+.telemetryRight {
+  position: absolute;
+  font-size: 9px;
+  line-height: 2.0;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(120, 195, 255, 0.72);
+  pointer-events: none;
+  user-select: none;
+  z-index: 5;
+}
+
+.telemetryLeft  { left: 2.5%; top: 14%; }
+.telemetryRight { right: 2.5%; top: 14%; text-align: right; }
+
+/* ── Mars marker ─────────────────────────────────────────────────────────── */
+.marsMarker {
+  position: absolute;
+  top: 35%;
+  right: 2.5%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 8px;
+  line-height: 1.6;
+  letter-spacing: 0.13em;
+  color: rgba(245, 115, 42, 0.92);
+  text-transform: uppercase;
+  pointer-events: none;
+  user-select: none;
+  z-index: 5;
+}
+
+.marsDot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(240, 105, 42, 0.98);
+  box-shadow: 0 0 6px rgba(255, 75, 18, 0.65), 0 0 12px rgba(255, 75, 18, 0.28);
+  flex-shrink: 0;
+}
+
+.marsMarker strong {
+  color: rgba(255, 140, 60, 0.98);
+  font-weight: 700;
+}
+
+/* ── Spacecraft — JS-positioned ──────────────────────────────────────────── */
+.spacecraft {
+  position: absolute;
+  font-size: 8px;
+  color: rgba(200, 230, 255, 0.92);
+  pointer-events: none;
+  user-select: none;
+  z-index: 6;
+  text-shadow:
+    0 0 4px rgba(255, 255, 255, 0.75),
+    0 0 9px rgba(90, 175, 255, 0.58);
+  transform: translate(-50%, -50%);
+  left: 75%;
+  top: 16%;
+}
+
+/* ── Waypoint dots ───────────────────────────────────────────────────────── */
+.waypointBlue,
+.waypointCyan {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.waypointBlue {
+  left: 18%;
+  top: 30%;
+  background: #38adff;
+  box-shadow: 0 0 10px #38adff;
+}
+
+.waypointCyan {
+  right: 23%;
+  top: 27%;
+  background: #2cd8ff;
+  box-shadow: 0 0 10px #2cd8ff;
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .hud {
+    width: 380px;
+    height: 380px;
+    top: 35%;
+  }
+
+  .coordGrid,
+  .degreeScale,
+  .telemetryLeft,
+  .telemetryRight,
+  .marsMarker,
+  .spacecraft,
+  .crosshair,
+  .waypointBlue,
+  .waypointCyan {
+    display: none;
+  }
+
+  .orbitBlue  { width: 155%; }
+  .orbitCyan  { width: 145%; }
+  .orbitMars  { width: 165%; }
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .spacecraft { animation: none; }
+}
+

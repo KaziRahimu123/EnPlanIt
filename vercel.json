@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/auth/:path*",
+      "destination": "/api/auth/:path*"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api/index.py"
+    }
+  ]
+}

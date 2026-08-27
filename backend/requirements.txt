@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+httpx
+python-dotenv
+openai
+sqlalchemy
+supabase
+python-jose[cryptography]
+pypdf
+python-docx
+python-multipart
+eval_type_backport
+email-validator
