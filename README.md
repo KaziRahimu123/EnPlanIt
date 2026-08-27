@@ -1,10 +1,10 @@
-<div align="center">
+<div align="left">
   <img src="frontend/public/logo.png" alt="EnPlanIt Logo" width="96" height="96" />
   <h1>ENPLANIT</h1>
   <p><strong>Enlighten your mission. Plan it to perfection.</strong></p>
 </div>
 
-<p align="center">
+<p align="left">
   <a href="https://youtu.be/your-demo-video">Watch the 3-minute demo</a> ·
   <a href="https://enplanit.vercel.app">Try the live demo</a> ·
   <a href="./JUDGE.md">Judge's Quick Guide</a>
