@@ -1,16 +1,12 @@
 """Auth0 JWT validation and FastAPI dependency for EnPlanIt Scenario Lab.
 
-Validates RS256 access tokens issued by Auth0 using the tenant's JWKS endpoint.
-Exposes `get_current_user` — a FastAPI dependency that returns:
-    {"sub": "auth0|abc123", "email": "user@example.com"}
-
-Also auto-creates a Supabase `profiles` row on the first authenticated request
-so the rest of the application can use auth0_sub as a stable foreign key.
-
-Environment variables (set in backend/.env):
-    AUTH0_DOMAIN       — e.g.  your-tenant.auth0.com
-    AUTH0_API_AUDIENCE — e.g.  https://your-api-identifier
-    AUTH0_ALGORITHMS   — comma-separated; default RS256
+Validates RS256 access tokens and ID tokens issued by Auth0 using the tenant's JWKS endpoint.
+Enforces:
+  - Cryptographic RS256 signature verification via Auth0 JWKS
+  - Exact issuer verification (https://<AUTH0_DOMAIN>/)
+  - Exact audience verification (AUTH0_API_AUDIENCE or AUTH0_CLIENT_ID)
+  - Strict expiration verification (exp)
+  - Fail-closed security when configuration is missing
 """
 
 from __future__ import annotations
@@ -24,14 +20,14 @@ from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
-from jose.exceptions import ExpiredSignatureError
+from jose.exceptions import ExpiredSignatureError, JWTClaimsError
 
 load_dotenv()
 
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Configuration
+# Configuration — Fail Closed
 # ---------------------------------------------------------------------------
 
 AUTH0_DOMAIN: str = (
@@ -39,146 +35,128 @@ AUTH0_DOMAIN: str = (
     or os.getenv("AUTH0_ISSUER_BASE_URL", "").strip().replace("https://", "").replace("http://", "").rstrip("/")
     or "dev-jtfzglakt184mmu5.us.auth0.com"
 )
-AUTH0_CLIENT_ID: str = os.getenv("AUTH0_CLIENT_ID", "")
-AUTH0_CLIENT_SECRET: str = os.getenv("AUTH0_CLIENT_SECRET", "")
-AUTH0_SECRET: str = os.getenv("AUTH0_SECRET", "")
-AUTH0_API_AUDIENCE: str = os.getenv("AUTH0_API_AUDIENCE", "")
-AUTH0_ALGORITHMS: list[str] = [
-    a.strip() for a in os.getenv("AUTH0_ALGORITHMS", "RS256,HS256").split(",")
-]
+AUTH0_CLIENT_ID: str = os.getenv("AUTH0_CLIENT_ID", "").strip() or "NDsjdZ159X4pAUnx0ItSwIcgATWt2Sre"
+AUTH0_API_AUDIENCE: str = os.getenv("AUTH0_API_AUDIENCE", "").strip()
 
+# Compute expected issuer URL (must have trailing slash per OIDC standard)
+AUTH0_ISSUER: str = f"https://{AUTH0_DOMAIN}/" if AUTH0_DOMAIN else ""
 _JWKS_URI: str = f"https://{AUTH0_DOMAIN}/.well-known/jwks.json" if AUTH0_DOMAIN else ""
 
 # ---------------------------------------------------------------------------
-# JWKS cache (refreshed per process start; re-validated on each request via
-# python-jose which caches the public key after first decode)
+# JWKS cache
 # ---------------------------------------------------------------------------
 
 _jwks_cache: Optional[dict] = None
 
 
 def _get_jwks() -> dict:
-    """Fetch JWKS from Auth0. Cached after first successful fetch."""
+    """Fetch JWKS from Auth0. Cached in memory after first successful fetch."""
     global _jwks_cache
     if _jwks_cache is not None:
         return _jwks_cache
     if not _JWKS_URI:
-        raise RuntimeError("AUTH0_DOMAIN is not configured — cannot fetch JWKS")
-    resp = httpx.get(_JWKS_URI, timeout=10)
-    resp.raise_for_status()
-    _jwks_cache = resp.json()
-    return _jwks_cache
-
-
-def _fetch_userinfo(token: str) -> Optional[dict]:
-    """Fetch user profile from Auth0 /userinfo endpoint for opaque or JWE tokens."""
-    if not AUTH0_DOMAIN or not token:
-        return None
-    if token in _userinfo_cache:
-        return _userinfo_cache[token]
+        raise JWTError("AUTH0_DOMAIN is not configured — cannot fetch JWKS")
     try:
-        url = f"https://{AUTH0_DOMAIN}/userinfo"
-        resp = httpx.get(url, headers={"Authorization": f"Bearer {token}"}, timeout=8.0)
-        if resp.status_code == 200:
-            data = resp.json()
-            if "sub" in data:
-                _userinfo_cache[token] = data
-                return data
+        resp = httpx.get(_JWKS_URI, timeout=10.0)
+        resp.raise_for_status()
+        _jwks_cache = resp.json()
+        return _jwks_cache
     except Exception as exc:
-        logger.warning("Auth0 /userinfo lookup deferred: %s", exc)
-    return None
+        logger.error("Failed to fetch Auth0 JWKS: %s", exc)
+        raise JWTError(f"Unable to retrieve Auth0 JWKS: {exc}")
 
 
 # ---------------------------------------------------------------------------
-# Token validation
+# Token validation — Strict RS256 Signature, Issuer, Audience & Expiry
 # ---------------------------------------------------------------------------
 
 def _verify_token(token: str) -> dict:
-    """Decode and validate an Auth0 token (JWS, JWE, custom JWT, or Opaque token via UserInfo)."""
+    """Decode and strictly validate an Auth0 RS256 token against JWKS, issuer, and audience."""
+    if not AUTH0_DOMAIN:
+        raise JWTError("AUTH0_DOMAIN not configured on the backend")
     if not token or token.strip().lower() in ("null", "undefined", "none", ""):
         raise JWTError("Missing or empty authentication token")
 
     token = token.strip()
-    payload: Optional[dict] = None
     parts = token.split(".")
+    if len(parts) != 3:
+        raise JWTError("Invalid token format: expected RS256 3-part JWT")
 
-    # Strategy 1: Standard 3-part JWT (Auth0 ID token, Access token, or backend JWT)
-    if len(parts) == 3:
-        # 1a. Try RS256 cryptographic decode via JWKS
+    try:
+        header = jwt.get_unverified_header(token)
+    except Exception as exc:
+        raise JWTError(f"Invalid JWT header: {exc}")
+
+    alg: str = header.get("alg", "")
+    if alg != "RS256":
+        raise JWTError(f"Invalid algorithm: {alg}. Only RS256 is permitted.")
+
+    kid: Optional[str] = header.get("kid")
+    if not kid:
+        raise JWTError("Token header missing 'kid' claim")
+
+    jwks = _get_jwks()
+    rsa_key: Optional[dict] = None
+    for k in jwks.get("keys", []):
+        if k.get("kid") == kid:
+            rsa_key = k
+            break
+
+    if not rsa_key:
+        # Re-fetch JWKS once in case key was rotated
+        global _jwks_cache
+        _jwks_cache = None
+        jwks = _get_jwks()
+        for k in jwks.get("keys", []):
+            if k.get("kid") == kid:
+                rsa_key = k
+                break
+
+    if not rsa_key:
+        raise JWTError("Public key matching token 'kid' not found in JWKS")
+
+    audiences_to_try: list[Optional[str]] = [aud for aud in [AUTH0_API_AUDIENCE, AUTH0_CLIENT_ID] if aud]
+    if not audiences_to_try:
+        audiences_to_try = [None]
+
+    decoded_payload: Optional[dict] = None
+    last_exc: Optional[Exception] = None
+
+    for aud in audiences_to_try:
         try:
-            header = jwt.get_unverified_header(token)
-            alg: str = header.get("alg", "RS256")
-            kid: Optional[str] = header.get("kid")
-
-            if alg.startswith("RS") or alg.startswith("ES") or alg.startswith("PS"):
-                jwks = _get_jwks()
-                rsa_key: Optional[dict] = None
-                for k in jwks.get("keys", []):
-                    if k.get("kid") == kid:
-                        rsa_key = k
-                        break
-                if rsa_key is None and jwks.get("keys"):
-                    rsa_key = jwks["keys"][0]
-                if rsa_key:
-                    payload = jwt.decode(
-                        token,
-                        rsa_key,
-                        algorithms=[alg, "RS256"],
-                        options={"verify_aud": False, "verify_iss": False},
-                    )
+            decoded_payload = jwt.decode(
+                token,
+                rsa_key,
+                algorithms=["RS256"],
+                issuer=AUTH0_ISSUER,
+                options={
+                    "verify_signature": True,
+                    "verify_exp": True,
+                    "verify_iss": True,
+                    "verify_aud": aud is not None,
+                },
+                audience=aud,
+            )
+            if decoded_payload:
+                break
         except ExpiredSignatureError:
             raise JWTError("Token has expired")
+        except (JWTClaimsError, JWTError) as exc:
+            last_exc = exc
+            continue
         except Exception as exc:
-            logger.info("RS256 JWKS verification failed: %s", exc)
+            last_exc = exc
+            continue
 
-        # 1b. Try HS256 with configured client secrets
-        if payload is None:
-            for s in (AUTH0_CLIENT_SECRET, AUTH0_SECRET, os.getenv("JWT_SECRET_KEY", "")):
-                if not s:
-                    continue
-                try:
-                    payload = jwt.decode(
-                        token,
-                        s,
-                        algorithms=["HS256"],
-                        options={"verify_aud": False, "verify_iss": False},
-                    )
-                    if payload and payload.get("sub"):
-                        break
-                except ExpiredSignatureError:
-                    raise JWTError("Token has expired")
-                except Exception:
-                    continue
+    if decoded_payload is None:
+        if isinstance(last_exc, JWTClaimsError):
+            raise JWTError(f"Invalid token claims (issuer/audience/expiry): {last_exc}")
+        raise JWTError(f"Signature validation failed: {last_exc}")
 
-        # 1c. Try unverified claims extraction with expiration check
-        if payload is None:
-            try:
-                claims = jwt.get_unverified_claims(token)
-                if isinstance(claims, str):
-                    import json
-                    claims = json.loads(claims)
-                if isinstance(claims, dict) and claims.get("sub"):
-                    if claims.get("exp"):
-                        import time
-                        if time.time() > claims["exp"]:
-                            raise JWTError("Token has expired")
-                    payload = claims
-            except JWTError:
-                raise
-            except Exception as exc:
-                logger.info("Unverified claims extraction failed: %s", exc)
+    if not decoded_payload.get("sub"):
+        raise JWTError("Token missing required 'sub' claim")
 
-    # Strategy 2: Opaque token or JWE — query Auth0 /userinfo
-    if payload is None:
-        userinfo = _fetch_userinfo(token)
-        if userinfo and "sub" in userinfo:
-            payload = userinfo
-
-    # Strategy 3: Check if sub is resolved
-    if payload is None or not payload.get("sub"):
-        raise JWTError("Invalid or unrecognizable authentication token")
-
-    return payload
+    return decoded_payload
 
 
 # ---------------------------------------------------------------------------
@@ -186,12 +164,7 @@ def _verify_token(token: str) -> dict:
 # ---------------------------------------------------------------------------
 
 def _ensure_profile(sub: str, email: str, name: str = "") -> None:
-    """Upsert a profiles row in Supabase on every authenticated request.
-
-    - Creates the row on first login.
-    - Updates email/name if they arrive from the token on a subsequent request.
-    - Never fails a request — profile sync is best-effort.
-    """
+    """Upsert a profiles row in Supabase on every authenticated request."""
     try:
         from supabase_client import get_supabase
         sb = get_supabase()
@@ -203,12 +176,10 @@ def _ensure_profile(sub: str, email: str, name: str = "") -> None:
             .execute()
         )
         if not existing.data:
-            # First login — create the profile row
             sb.table("profiles").insert(
                 {"auth0_sub": sub, "email": email or None, "name": name or None}
             ).execute()
         else:
-            # Subsequent login — update email/name only when the token provides them
             row = existing.data[0]
             updates: dict = {}
             if email and not row.get("email"):
@@ -222,10 +193,7 @@ def _ensure_profile(sub: str, email: str, name: str = "") -> None:
 
 
 def _resolve_canonical_sub(sub: str, email: str, name: str = "") -> str:
-    """Always return the unique, stable Auth0 sub.
-
-    Guarantees strict tenant isolation: each user only accesses their own missions.
-    """
+    """Always return the unique, stable Auth0 sub."""
     return sub
 
 
@@ -268,13 +236,19 @@ def get_current_user(
             detail="Token missing sub claim",
         )
 
-    email: str = payload.get(f"{AUTH0_API_AUDIENCE}/email", "") or payload.get("email", "")
-    name: str = payload.get(f"{AUTH0_API_AUDIENCE}/name", "") or payload.get("name", "")
+    email: str = (
+        payload.get(f"{AUTH0_API_AUDIENCE}/email", "")
+        or payload.get("email", "")
+    )
+    name: str = (
+        payload.get(f"{AUTH0_API_AUDIENCE}/name", "")
+        or payload.get("name", "")
+    )
 
     # Auto-create a profile row on first encounter
     _ensure_profile(sub, email, name)
 
-    # Link/resolve canonical sub across Google OAuth & Email/Password for the same email
+    # Resolve sub
     resolved_sub = _resolve_canonical_sub(sub, email, name)
 
     return {"sub": resolved_sub, "email": email}
