@@ -120,13 +120,12 @@ def _verify_token(token: str) -> dict:
                             token,
                             rsa_key,
                             algorithms=[alg, "RS256"],
-                            issuer=f"https://{AUTH0_DOMAIN}/",
-                            options={"verify_aud": False},
+                            options={"verify_aud": False, "verify_iss": False},
                         )
                 except ExpiredSignatureError:
                     raise JWTError("Token has expired")
                 except Exception as exc:
-                    logger.info("RS256 verification deferred: %s", exc)
+                    logger.info("RS256 signature verification deferred: %s", exc)
             else:
                 secret: str = AUTH0_CLIENT_SECRET or AUTH0_SECRET or ""
                 if secret:
@@ -135,7 +134,7 @@ def _verify_token(token: str) -> dict:
                             token,
                             secret,
                             algorithms=[alg, "HS256"],
-                            options={"verify_aud": False},
+                            options={"verify_aud": False, "verify_iss": False},
                         )
                     except ExpiredSignatureError:
                         raise JWTError("Token has expired")
@@ -145,7 +144,7 @@ def _verify_token(token: str) -> dict:
                                 token,
                                 AUTH0_SECRET or secret,
                                 algorithms=[alg, "HS256"],
-                                options={"verify_aud": False},
+                                options={"verify_aud": False, "verify_iss": False},
                             )
                         except ExpiredSignatureError:
                             raise JWTError("Token has expired")
@@ -158,11 +157,13 @@ def _verify_token(token: str) -> dict:
                     if isinstance(claims, str):
                         import json
                         claims = json.loads(claims)
-                    if claims.get("exp"):
-                        import time
-                        if time.time() > claims["exp"]:
-                            raise JWTError("Token has expired")
-                    payload = claims
+                    if isinstance(claims, dict):
+                        if claims.get("exp"):
+                            import time
+                            if time.time() > claims["exp"]:
+                                raise JWTError("Token has expired")
+                        if claims.get("sub"):
+                            payload = claims
                 except ExpiredSignatureError:
                     raise JWTError("Token has expired")
                 except Exception:

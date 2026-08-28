@@ -20,7 +20,10 @@ const appBaseUrl = (
 const authParams: Record<string, string> = {
   scope: "openid profile email",
 };
-const audience = process.env.AUTH0_AUDIENCE?.trim();
+const audience = (
+  process.env.AUTH0_API_AUDIENCE?.trim() ||
+  process.env.AUTH0_AUDIENCE?.trim()
+);
 if (
   audience &&
   audience !== "https://api.enplanit.local" &&
