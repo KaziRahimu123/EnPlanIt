@@ -1854,11 +1854,11 @@ function renderNodeGlyph(iconType: string, strokeColor: string) {
               if (node.scenarioKey === "mission_duration_days" && tgt?.scenarioKey === "resource_availability_pct") {
                 const diff = derivedTelemetry.resources.val - derivedTelemetry.resources.base;
                 liveDelta = `Remaining Resources: ${derivedTelemetry.resources.base}% → ${derivedTelemetry.resources.val}% (${diff >= 0 ? "+" : ""}${diff}%)`;
-                physicsNote = "Non-linear consumable reserve & life-support recycling decay.";
+                physicsNote = "Rule-based consumable reserve & life-support recycling estimation.";
               } else if (node.scenarioKey === "mission_duration_days" && tgt?.scenarioKey === "daily_power_consumption_kwh") {
                 const diff = derivedTelemetry.consumption.val - derivedTelemetry.consumption.base;
                 liveDelta = `Power Demand: ${derivedTelemetry.consumption.base} kWh → ${derivedTelemetry.consumption.val} kWh (${diff >= 0 ? "+" : ""}${diff} kWh)`;
-                physicsNote = "Non-linear radiative coating wear & thermal control load.";
+                physicsNote = "Rule-based radiative coating wear & thermal control load.";
               } else if (node.scenarioKey === "mission_duration_days" && tgt?.id === "constraints") {
                 const radMsv = (derivedTelemetry.duration.val * 0.67).toFixed(1);
                 const pctOfLimit = ((derivedTelemetry.duration.val * 0.67 / 600) * 100).toFixed(0);
@@ -2039,7 +2039,7 @@ function renderNodeGlyph(iconType: string, strokeColor: string) {
           {/* Indicator */}
           <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse shrink-0" />
           <span className="text-[10px] font-mono text-[var(--accent-glow)] uppercase tracking-widest whitespace-nowrap">
-            Mission Digital Twin
+            Interactive Mission Dependency Model
           </span>
           {missionId && (
             <span className="text-[9px] font-mono text-[var(--text-muted)] hidden sm:inline">

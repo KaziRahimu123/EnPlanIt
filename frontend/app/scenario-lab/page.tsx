@@ -841,7 +841,7 @@ function ScenarioContent() {
           {/* Middle Row: Mission Title & Compact 2-Line Clickable Description */}
           <div>
             <h2 className="text-lg font-bold text-white font-mono tracking-tight mb-1">
-              {currentMission.name || "Mission Digital Twin"}
+              {currentMission.name || "Mission Dependency Model"}
             </h2>
             <div
               onClick={() => setBriefingExpanded(!briefingExpanded)}

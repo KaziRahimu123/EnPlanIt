@@ -280,8 +280,15 @@ export interface EnvironmentalTelemetry {
   crew_size: number;
   daily_water_burn_kg: number;
   daily_oxygen_burn_kg: number;
+  daily_food_burn_kg?: number;
+  nominal_consumables_mass_kg?: number;
+  contingency_reserve_kg?: number;
   total_consumables_mass_kg: number;
   estimated_radiation_msv: number;
+  radiation_career_limit_pct?: number;
+  radiation_methodology?: string | null;
+  peukert_autonomy_hours?: number | null;
+  peukert_effective_capacity_kwh?: number | null;
 }
 
 export interface ScenarioRunResponse {

@@ -6,8 +6,8 @@ import { Auth0Provider } from "@auth0/nextjs-auth0/client";
 import { RoleProvider } from "@/lib/RoleContext";
 
 export const metadata: Metadata = {
-  title: "EnPlanIt — Space Mission Intelligence & Digital Twin",
-  description: "Enlighten your mission. Plan it to perfection. Interactive space mission digital twin and scenario analysis platform.",
+  title: "EnPlanIt — Space Mission Intelligence & Dependency Modeling",
+  description: "Enlighten your mission. Plan it to perfection. Interactive space mission dependency model and scenario analysis platform.",
   icons: {
     icon: "/logo.png",
     shortcut: "/logo.png",

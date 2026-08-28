@@ -84,8 +84,15 @@ class EnvironmentalTelemetry(BaseModel):
     crew_size: int
     daily_water_burn_kg: float
     daily_oxygen_burn_kg: float
+    daily_food_burn_kg: float = 0.0
+    nominal_consumables_mass_kg: float = 0.0
+    contingency_reserve_kg: float = 0.0
     total_consumables_mass_kg: float
     estimated_radiation_msv: float
+    radiation_career_limit_pct: float = 0.0
+    radiation_methodology: Optional[str] = None
+    peukert_autonomy_hours: Optional[float] = None
+    peukert_effective_capacity_kwh: Optional[float] = None
 
 
 class ScenarioRunRequest(BaseModel):
@@ -117,8 +124,195 @@ class ScenarioRunResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Threshold logic  (Deterministic aerospace engineering models)
+# Deterministic Aerospace Engineering & Life-Support Calculations
 # ---------------------------------------------------------------------------
+
+def calculate_crew_consumables(
+    crew_size: int,
+    duration_days: float,
+    contingency_reserve_pct: float = 15.0,
+) -> dict[str, Any]:
+    """
+    Standardized Consumables Logistics Model (NASA-STD-3001 Human Spaceflight Baseline).
+    Single documented per-person per-day nominal baseline:
+      - Drinking, food prep & hygiene water: 2.50 kg/person/day
+      - Metabolic oxygen (O2) consumption: 0.84 kg/person/day
+      - Shelf-stable nutrition & dry food ration: 1.46 kg/person/day
+      - Total nominal burn: 4.80 kg/person/day (19.20 kg/day for 4 crew)
+      - Flight contingency reserve buffer: +15%
+    """
+    crew = max(1, crew_size)
+    days = max(0.0, duration_days)
+
+    rate_water = 2.50
+    rate_o2 = 0.84
+    rate_food = 1.46
+    rate_nominal_total = rate_water + rate_o2 + rate_food  # exactly 4.80 kg/person/day
+
+    daily_water = round(crew * rate_water, 2)
+    daily_o2 = round(crew * rate_o2, 2)
+    daily_food = round(crew * rate_food, 2)
+    daily_nominal = round(crew * rate_nominal_total, 2)
+
+    total_water = round(daily_water * days, 1)
+    total_o2 = round(daily_o2 * days, 1)
+    total_food = round(daily_food * days, 1)
+    nominal_total = round(daily_nominal * days, 1)
+
+    contingency_mult = contingency_reserve_pct / 100.0
+    contingency_mass = round(nominal_total * contingency_mult, 1)
+    total_with_contingency = round(nominal_total + contingency_mass, 1)
+
+    return {
+        "crew_size": crew,
+        "duration_days": days,
+        "rate_water_kg_day": rate_water,
+        "rate_oxygen_kg_day": rate_o2,
+        "rate_food_kg_day": rate_food,
+        "rate_nominal_total_kg_day": rate_nominal_total,
+        "daily_water_kg": daily_water,
+        "daily_oxygen_kg": daily_o2,
+        "daily_food_kg": daily_food,
+        "daily_nominal_kg": daily_nominal,
+        "total_water_kg": total_water,
+        "total_oxygen_kg": total_o2,
+        "total_food_kg": total_food,
+        "nominal_total_kg": nominal_total,
+        "contingency_reserve_pct": contingency_reserve_pct,
+        "contingency_reserve_kg": contingency_mass,
+        "total_with_contingency_kg": total_with_contingency,
+        "standard_reference": "NASA-STD-3001 (4.80 kg/person/day nominal baseline with +15% reserve)",
+    }
+
+
+def calculate_radiation_exposure(
+    mission_duration_days: float,
+    destination: str = "Mars Surface",
+    transit_days: Optional[float] = None,
+    surface_days: Optional[float] = None,
+    shielding_factor_pct: float = 0.0,
+) -> dict[str, Any]:
+    """
+    Reference Radiation Exposure Estimation.
+    Daily dose rates are explicit baseline mission assumptions:
+      - Deep space transit (unshielded GCR/SPE): ~1.50 mSv/day (assumption)
+      - Mars surface (atmospheric + planetary shielding): ~0.70 mSv/day (assumption)
+      - Lunar surface (unshielded regolith): ~1.20 mSv/day (assumption)
+      - LEO orbital environment (geomagnetic shielding): ~0.40 mSv/day (assumption)
+    Standard: Evaluated against NASA 600 mSv Lifetime Career Astronaut Radiation Exposure Limit.
+    """
+    dest_lower = destination.lower()
+    days = max(0.0, mission_duration_days)
+
+    if "mars" in dest_lower:
+        transit_rate = 1.50
+        surface_rate = 0.70
+        if transit_days is None or surface_days is None:
+            if days >= 360:
+                t_days = min(360.0, days * 0.4)
+                s_days = days - t_days
+            else:
+                t_days = days * 0.5
+                s_days = days * 0.5
+        else:
+            t_days = transit_days
+            s_days = surface_days
+    elif "moon" in dest_lower or "lunar" in dest_lower:
+        transit_rate = 1.50
+        surface_rate = 1.20
+        t_days = min(6.0, days) if transit_days is None else transit_days
+        s_days = max(0.0, days - t_days) if surface_days is None else surface_days
+    elif "leo" in dest_lower or "earth" in dest_lower:
+        transit_rate = 0.40
+        surface_rate = 0.40
+        t_days = 0.0
+        s_days = days
+    else:
+        transit_rate = 1.50
+        surface_rate = 0.70
+        t_days = days * 0.4
+        s_days = days * 0.6
+
+    shield_factor = max(0.0, min(0.95, shielding_factor_pct / 100.0))
+    effective_mult = 1.0 - shield_factor
+
+    transit_dose = t_days * transit_rate * effective_mult
+    surface_dose = s_days * surface_rate * effective_mult
+    total_dose_msv = round(transit_dose + surface_dose, 1)
+    career_limit_msv = 600.0
+    career_pct = round((total_dose_msv / career_limit_msv) * 100.0, 1)
+
+    methodology = (
+        f"Calculated as (transit {t_days:.0f}d × {transit_rate:.2f} mSv/d + surface {s_days:.0f}d × {surface_rate:.2f} mSv/d) "
+        f"× {effective_mult:.2f} shielding factor compared against the NASA 600 mSv career limit."
+    )
+
+    return {
+        "total_radiation_msv": total_dose_msv,
+        "career_limit_pct": career_pct,
+        "career_limit_msv": career_limit_msv,
+        "transit_days": round(t_days, 1),
+        "surface_days": round(s_days, 1),
+        "transit_rate_msv_day": transit_rate,
+        "surface_rate_msv_day": surface_rate,
+        "shielding_factor_pct": shielding_factor_pct,
+        "methodology": methodology,
+    }
+
+
+def calculate_peukert_discharge(
+    battery_capacity_kwh: float,
+    daily_power_consumption_kwh: float,
+    solar_power_pct: float = 100.0,
+    peukert_exponent: float = 1.10,
+    rated_hours: float = 24.0,
+) -> dict[str, Any]:
+    """
+    Deterministic Peukert Battery Capacity & Autonomy Model.
+    Governing Equations:
+      Continuous Power Draw (kW): P_draw = daily_power_consumption_kwh / 24.0
+      Rated Discharge Power (kW): P_rated = battery_capacity_kwh / rated_hours
+      Peukert Derating: C_eff = C_rated * (P_rated / P_draw)^(k - 1)
+      Autonomous Discharge Time: T_autonomy = C_eff / P_draw
+    Where:
+      - k: Peukert exponent (1.10 for aerospace space-qualified Li-ion/NMC chemistry)
+      - rated_hours: 24h baseline discharge cycle
+    """
+    if battery_capacity_kwh <= 0 or daily_power_consumption_kwh <= 0:
+        return {
+            "installed_capacity_kwh": battery_capacity_kwh,
+            "effective_capacity_kwh": 0.0,
+            "power_draw_kw": 0.0,
+            "peukert_exponent": peukert_exponent,
+            "derating_factor": 1.0,
+            "autonomy_hours": 0.0,
+            "coverage_ratio": 0.0,
+        }
+
+    power_draw_kw = daily_power_consumption_kwh / 24.0
+    rated_power_kw = battery_capacity_kwh / rated_hours
+
+    if power_draw_kw > 0 and rated_power_kw > 0:
+        current_ratio = rated_power_kw / power_draw_kw
+        derating_factor = round(min(1.2, max(0.4, current_ratio ** (peukert_exponent - 1.0))), 3)
+    else:
+        derating_factor = 1.0
+
+    effective_capacity_kwh = round(battery_capacity_kwh * derating_factor, 2)
+    autonomy_hours = round(effective_capacity_kwh / max(0.01, power_draw_kw), 1)
+    solar_eff = (solar_power_pct / 100.0) * effective_capacity_kwh
+    coverage_ratio = round(solar_eff / max(0.1, daily_power_consumption_kwh), 2)
+
+    return {
+        "installed_capacity_kwh": battery_capacity_kwh,
+        "effective_capacity_kwh": effective_capacity_kwh,
+        "power_draw_kw": round(power_draw_kw, 2),
+        "peukert_exponent": peukert_exponent,
+        "derating_factor": derating_factor,
+        "autonomy_hours": autonomy_hours,
+        "coverage_ratio": coverage_ratio,
+    }
+
 
 # VARIABLE METADATA — used by VariableChange list
 VARIABLE_META: list[tuple[str, str, str]] = [
@@ -133,10 +327,9 @@ VARIABLE_META: list[tuple[str, str, str]] = [
 
 def _power_concern(v: ScenarioVariables) -> ConcernResult:
     """
-    Comprehensive Aerospace Electrical Power Margin Evaluation:
+    Aerospace Electrical Power Margin Evaluation:
       - Evaluates Solar Generation Health (solar_power_pct).
-      - If Battery & Daily Consumption are also provided, calculates full energy coverage ratio & autonomy.
-      - If only Solar is provided, evaluates array health directly.
+      - Applies Peukert Battery Capacity Model (C_eff = C_rated * (I_rated / I_actual)^(k-1)) when storage & consumption are specified.
     """
     has_solar = v.solar_power_pct > 0
     has_battery = v.battery_capacity_kwh > 0
@@ -148,7 +341,6 @@ def _power_concern(v: ScenarioVariables) -> ConcernResult:
             reason="No power generation architecture or battery storage telemetry specified in mission dossier.",
         )
 
-    # 1. Solar array generation health
     solar = v.solar_power_pct if has_solar else 100.0
     if solar >= 85:
         solar_level: ConcernLevel = "LOW"
@@ -166,29 +358,33 @@ def _power_concern(v: ScenarioVariables) -> ConcernResult:
             "Insufficient primary generation capacity — high electrical brownout hazard."
         )
 
-    # 2. If storage and consumption are also provided, evaluate full power coverage ratio
     if has_battery and has_consumption:
-        effective = (solar / 100.0) * v.battery_capacity_kwh
+        peukert = calculate_peukert_discharge(
+            battery_capacity_kwh=v.battery_capacity_kwh,
+            daily_power_consumption_kwh=v.daily_power_consumption_kwh,
+            solar_power_pct=solar,
+        )
+        effective = peukert["effective_capacity_kwh"]
         consumption = v.daily_power_consumption_kwh
-        battery = v.battery_capacity_kwh
-        ratio = effective / max(0.1, consumption)
-        buffer_hours = (battery / max(0.1, consumption)) * 24.0
+        autonomy_h = peukert["autonomy_hours"]
+        ratio = peukert["coverage_ratio"]
+        derating = peukert["derating_factor"]
 
         if ratio >= 1.30 and solar >= 85:
             return ConcernResult(
                 level="LOW",
                 reason=(
-                    f"Supply: {effective:.1f} kWh/day (at {solar:.0f}% solar) vs Demand: {consumption:.1f} kWh/day "
-                    f"({ratio:.2f}x generation coverage). Battery storage ({battery:.1f} kWh) provides "
-                    f"{buffer_hours:.1f}h continuous energy autonomy."
+                    f"Supply: {(solar/100.0)*effective:.1f} kWh/day vs Demand: {consumption:.1f} kWh/day "
+                    f"({ratio:.2f}x generation coverage). Peukert-adjusted battery storage ({effective:.1f} kWh effective, "
+                    f"derating factor {derating:.2f}) provides {autonomy_h:.1f}h continuous energy autonomy."
                 ),
             )
         elif ratio >= 0.95 and solar >= 65:
             return ConcernResult(
                 level="MEDIUM",
                 reason=(
-                    f"Supply: {effective:.1f} kWh/day (at {solar:.0f}% solar) vs Demand: {consumption:.1f} kWh/day "
-                    f"({ratio:.2f}x coverage). Battery buffer ({battery:.1f} kWh / {buffer_hours:.1f}h autonomy) "
+                    f"Supply: {(solar/100.0)*effective:.1f} kWh/day vs Demand: {consumption:.1f} kWh/day "
+                    f"({ratio:.2f}x coverage). Peukert-adjusted battery buffer ({effective:.1f} kWh / {autonomy_h:.1f}h autonomy) "
                     "requires load-shedding during low insolation."
                 ),
             )
@@ -196,25 +392,27 @@ def _power_concern(v: ScenarioVariables) -> ConcernResult:
             return ConcernResult(
                 level="HIGH",
                 reason=(
-                    f"Supply: {effective:.1f} kWh/day vs Demand: {consumption:.1f} kWh/day "
-                    f"(Deficit: {ratio*100:.0f}% coverage). Battery capacity ({battery:.1f} kWh) will deplete in "
-                    f"{buffer_hours:.1f}h without auxiliary generation."
+                    f"Supply: {(solar/100.0)*effective:.1f} kWh/day vs Demand: {consumption:.1f} kWh/day "
+                    f"(Deficit: {ratio*100:.0f}% coverage). Peukert-adjusted battery ({effective:.1f} kWh) will deplete in "
+                    f"{autonomy_h:.1f}h without auxiliary generation."
                 ),
             )
 
-    # If only solar was provided, return the solar array health evaluation
     return ConcernResult(level=solar_level, reason=solar_reason)
 
 
 def _resource_concern(v: ScenarioVariables) -> ConcernResult:
     """
-    Comprehensive Life Support (ECLSS) Consumables Evaluation:
-      - Computes daily water (10.0 kg/d) & oxygen (3.36 kg/d) baseline for standard 4-crew complement.
-      - Calculates closed-loop recycling reserve buffer and mission sustainability.
+    Life Support (ECLSS) Consumables Evaluation (NASA-STD-3001 Baseline):
+      - 4.80 kg/person/day nominal baseline: Water (2.50 kg), Oxygen (0.84 kg), Food (1.46 kg).
+      - Daily nominal burn for 4 crew = 19.20 kg/day.
     """
     pct = v.resource_availability_pct
-    daily_h2o = 10.0
-    daily_o2 = 3.36
+    consumables = calculate_crew_consumables(crew_size=4, duration_days=1.0)
+    daily_h2o = consumables["daily_water_kg"]
+    daily_o2 = consumables["daily_oxygen_kg"]
+    daily_food = consumables["daily_food_kg"]
+    daily_total = consumables["daily_nominal_kg"]
 
     if pct <= 0:
         return ConcernResult(
@@ -225,15 +423,15 @@ def _resource_concern(v: ScenarioVariables) -> ConcernResult:
         return ConcernResult(
             level="LOW",
             reason=(
-                f"ECLSS capacity at {pct:.0f}%. Nominal consumption: {daily_h2o:.1f} kg H₂O/day & "
-                f"{daily_o2:.2f} kg O₂/day (crew of 4). Closed-loop reclamation provides robust contingency buffer."
+                f"ECLSS capacity at {pct:.0f}%. Nominal consumption: {daily_h2o:.1f} kg H₂O/d, {daily_o2:.2f} kg O₂/d, "
+                f"{daily_food:.2f} kg food/d ({daily_total:.1f} kg/d for 4 crew). Closed-loop reclamation provides robust contingency buffer."
             ),
         )
     elif pct >= 60:
         return ConcernResult(
             level="MEDIUM",
             reason=(
-                f"ECLSS capacity at {pct:.0f}%. Consumable burn: {daily_h2o:.1f} kg H₂O/day & {daily_o2:.2f} kg O₂/day. "
+                f"ECLSS capacity at {pct:.0f}%. Consumable burn: {daily_total:.1f} kg/day for 4 crew (NASA-STD-3001 baseline: 4.80 kg/person/day). "
                 "Closed-loop recovery efficiency must maintain >=90% to avoid premature consumable exhaustion."
             ),
         )
@@ -242,14 +440,14 @@ def _resource_concern(v: ScenarioVariables) -> ConcernResult:
             level="HIGH",
             reason=(
                 f"ECLSS capacity critical at {pct:.0f}%. High consumable depletion hazard "
-                f"({daily_h2o:.1f} kg H₂O/day, {daily_o2:.2f} kg O₂/day). Mandatory rationing and emergency resupply window required."
+                f"({daily_total:.1f} kg/day for 4 crew). Mandatory rationing and emergency resupply window required."
             ),
         )
 
 
 def _communication_concern(v: ScenarioVariables) -> ConcernResult:
     """
-    Comprehensive Planetary Link Latency Evaluation:
+    Planetary Link Latency Evaluation:
       - Computes Speed-of-Light 1-Way Latency & Round-Trip Time (RTT).
       - Determines Ground Command & Control Loop Window and required Onboard Autonomy Level.
     """
@@ -289,10 +487,9 @@ def _communication_concern(v: ScenarioVariables) -> ConcernResult:
 
 def _duration_concern(v: ScenarioVariables) -> ConcernResult:
     """
-    Comprehensive Mission Duration & Cosmic Radiation Exposure Evaluation:
-      - Computes Cumulative Ionizing Radiation Dose (mSv) = Days * 0.70 mSv/day.
-      - Calculates % of NASA / ESA Lifetime Career Radiation Safety Limit (600 mSv).
-      - Computes Total Consumables Mass Logistics Budget (kg) = Days * 19.2 kg/day (4 crew).
+    Mission Duration, Radiation Dose, and Consumables Logistics Evaluation:
+      - Radiation: Evaluates cumulative dose against the NASA 600 mSv lifetime career astronaut limit.
+      - Consumables: Uses NASA-STD-3001 baseline (4.80 kg/person/day = 19.20 kg/day for 4 crew).
     """
     days = v.mission_duration_days
     if days <= 0:
@@ -301,16 +498,21 @@ def _duration_concern(v: ScenarioVariables) -> ConcernResult:
             reason="Mission timeline duration is unspecified in mission dossier.",
         )
 
-    radiation_msv = round(days * 0.70, 1)
-    career_limit_pct = round((radiation_msv / 600.0) * 100.0, 1)
-    consumables_mass_kg = round(days * 19.2, 1)
+    rad = calculate_radiation_exposure(mission_duration_days=days, destination="Mars Surface")
+    radiation_msv = rad["total_radiation_msv"]
+    career_limit_pct = rad["career_limit_pct"]
+
+    consumables = calculate_crew_consumables(crew_size=4, duration_days=days)
+    consumables_mass_kg = consumables["nominal_total_kg"]
+    total_with_reserve_kg = consumables["total_with_contingency_kg"]
 
     if days <= 60:
         return ConcernResult(
             level="LOW",
             reason=(
                 f"Mission span: {days:.0f} days. Estimated cumulative radiation: {radiation_msv:.1f} mSv "
-                f"({career_limit_pct:.1f}% of NASA 600 mSv career limit). Consumables payload mass: {consumables_mass_kg:,.0f} kg (NASA-STD-3001 4-crew baseline: 19.2 kg/day)."
+                f"({career_limit_pct:.1f}% of NASA 600 mSv career limit). Consumables payload mass: {consumables_mass_kg:,.0f} kg nominal "
+                f"({total_with_reserve_kg:,.0f} kg with +15% reserve, NASA-STD-3001 4-crew baseline: 19.2 kg/day)."
             ),
         )
     elif days <= 270:
@@ -318,7 +520,8 @@ def _duration_concern(v: ScenarioVariables) -> ConcernResult:
             level="MEDIUM",
             reason=(
                 f"Mission span: {days:.0f} days. Estimated cumulative radiation: {radiation_msv:.1f} mSv "
-                f"({career_limit_pct:.1f}% of NASA 600 mSv career limit). Consumables budget: {consumables_mass_kg:,.0f} kg (NASA-STD-3001 4-crew baseline: 19.2 kg/day). "
+                f"({career_limit_pct:.1f}% of NASA 600 mSv career limit). Consumables budget: {consumables_mass_kg:,.0f} kg nominal "
+                f"({total_with_reserve_kg:,.0f} kg with +15% reserve, 19.2 kg/day for 4 crew). "
                 "Requires active bio-monitoring and musculoskeletal exercise protocols."
             ),
         )
@@ -327,7 +530,8 @@ def _duration_concern(v: ScenarioVariables) -> ConcernResult:
             level="HIGH",
             reason=(
                 f"Mission span: {days:.0f} days. Estimated cumulative radiation: {radiation_msv:.1f} mSv "
-                f"({career_limit_pct:.1f}% of NASA 600 mSv career limit). Consumables logistics mass: {consumables_mass_kg:,.0f} kg (NASA-STD-3001 4-crew baseline: 19.2 kg/day). "
+                f"({career_limit_pct:.1f}% of NASA 600 mSv career limit). Consumables logistics mass: {consumables_mass_kg:,.0f} kg nominal "
+                f"({total_with_reserve_kg:,.0f} kg with +15% reserve). "
                 "Severe chronic GCR/SPE exposure risk; engineered regolith storm shelter mandatory."
             ),
         )
@@ -496,11 +700,13 @@ def _build_full_scenario_response(mission_id: str | None, before: ScenarioVariab
         day_night_h = 24.6
         max_eclipse_h = 12.3
 
-    daily_water = crew_size * 2.5
-    daily_o2 = crew_size * 0.84
-    daily_food = crew_size * 1.8
-    total_consumables_kg = round(after.mission_duration_days * (daily_water + daily_o2 + daily_food), 1)
-    radiation_msv = round(after.mission_duration_days * (0.7 if "surface" in dest_lower else 1.2), 1)
+    consumables_calc = calculate_crew_consumables(crew_size=crew_size, duration_days=after.mission_duration_days)
+    radiation_calc = calculate_radiation_exposure(mission_duration_days=after.mission_duration_days, destination=destination)
+    peukert_calc = calculate_peukert_discharge(
+        battery_capacity_kwh=after.battery_capacity_kwh,
+        daily_power_consumption_kwh=after.daily_power_consumption_kwh,
+        solar_power_pct=after.solar_power_pct if after.solar_power_pct > 0 else 100.0,
+    )
 
     environment = EnvironmentalTelemetry(
         destination=destination,
@@ -509,10 +715,17 @@ def _build_full_scenario_response(mission_id: str | None, before: ScenarioVariab
         day_night_cycle_hours=day_night_h,
         max_eclipse_hours=max_eclipse_h,
         crew_size=crew_size,
-        daily_water_burn_kg=round(daily_water, 2),
-        daily_oxygen_burn_kg=round(daily_o2, 2),
-        total_consumables_mass_kg=total_consumables_kg,
-        estimated_radiation_msv=radiation_msv,
+        daily_water_burn_kg=consumables_calc["daily_water_kg"],
+        daily_oxygen_burn_kg=consumables_calc["daily_oxygen_kg"],
+        daily_food_burn_kg=consumables_calc["daily_food_kg"],
+        nominal_consumables_mass_kg=consumables_calc["nominal_total_kg"],
+        contingency_reserve_kg=consumables_calc["contingency_reserve_kg"],
+        total_consumables_mass_kg=consumables_calc["total_with_contingency_kg"],
+        estimated_radiation_msv=radiation_calc["total_radiation_msv"],
+        radiation_career_limit_pct=radiation_calc["career_limit_pct"],
+        radiation_methodology=radiation_calc["methodology"],
+        peukert_autonomy_hours=peukert_calc["autonomy_hours"] if after.battery_capacity_kwh > 0 else None,
+        peukert_effective_capacity_kwh=peukert_calc["effective_capacity_kwh"] if after.battery_capacity_kwh > 0 else None,
     )
 
     # 3. Cascading Effects (Only for specified telemetry with real variance/constraints)
@@ -530,11 +743,13 @@ def _build_full_scenario_response(mission_id: str | None, before: ScenarioVariab
 
     # Cascade 2: Duration extension -> Cumulative Radiation Dose & Resupply Budget
     if after.mission_duration_days > 270:
+        rad_dose = radiation_calc["total_radiation_msv"]
+        total_kg = consumables_calc["total_with_contingency_kg"]
         cascades.append(CascadingEffect(
             source_subsystem="Mission Timeline",
             impacted_subsystem="Crew Health & Bio-Shielding",
-            severity="CRITICAL" if radiation_msv > 600 else "HIGH",
-            description=f"Mission duration ({after.mission_duration_days:.0f}d) pushes cumulative radiation exposure to {radiation_msv:.0f} mSv{' (exceeds NASA career limits without regolith shielding)' if radiation_msv > 600 else ''} and requires {total_consumables_kg:,.0f} kg total life-support consumables (NASA-STD-3001 baseline: 19.2 kg/day for 4 crew).",
+            severity="CRITICAL" if rad_dose > 600 else "HIGH",
+            description=f"Mission duration ({after.mission_duration_days:.0f}d) pushes cumulative radiation exposure to {rad_dose:.0f} mSv{' (exceeds NASA 600 mSv career limit without regolith shielding)' if rad_dose > 600 else ''} and requires {total_kg:,.0f} kg total life-support consumables (NASA-STD-3001 baseline: 4.80 kg/person/day with 15% reserve).",
         ))
 
     # Cascade 3: Communication Delay -> Autonomous Flight Safety

@@ -232,7 +232,7 @@ export default function HomePage() {
             {/* Top Pill Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-sky-400/40 bg-sky-950/70 backdrop-blur-md text-sky-200 text-xs sm:text-sm font-mono font-bold tracking-wider shadow-[0_0_20px_rgba(56,189,248,0.25)]">
               <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse shadow-[0_0_8px_#38bdf8]" />
-              <span>⚡ COGNITIVE DIGITAL TWIN FOR SPACE MISSIONS</span>
+              <span>⚡ INTERACTIVE MISSION DEPENDENCY MODEL FOR SPACE MISSIONS</span>
             </div>
 
             {/* Exactly 2 Clean Lines Heading */}
@@ -245,8 +245,8 @@ export default function HomePage() {
 
             {/* Clear, Engaging Subtitle */}
             <p className="text-slate-200 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-normal drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)]">
-              Paste mission specs, upload flight dossiers, or drop a PDF — EnPlanIt builds interactive digital twins,
-              topological orbital intelligence graphs, risk trade-offs, and validated flight plans in seconds.
+              Paste mission specs, upload flight dossiers, or drop a PDF — EnPlanIt builds interactive mission dependency models,
+              topological subsystem graphs, risk trade-offs, and preliminary mission assessments in seconds.
             </p>
 
             {/* Dual CTA Buttons */}
@@ -340,11 +340,11 @@ export default function HomePage() {
                   Create Mission
                 </h3>
                 <p className="text-xs text-sky-400/90 font-mono font-semibold mt-0.5">
-                  Dossier Ingestion & Telemetry Extraction
+                  Dossier Ingestion & Parameter Extraction
                 </p>
               </div>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Upload PDF, DOCX, TXT, or MD flight dossiers or describe mission concepts in natural language. EnPlanIt automatically parses up to 5,000 characters of architecture, extracts baseline parameters, and synthesizes the digital twin.
+                Upload PDF, DOCX, TXT, or MD flight dossiers or describe mission concepts in natural language. EnPlanIt automatically parses up to 5,000 characters of architecture, extracts baseline parameters, and synthesizes the mission dependency model.
               </p>
               <ul className="space-y-2 pt-3 border-t border-[#1e3a5f]/40 text-xs text-slate-300 font-mono">
                 <li className="flex items-start gap-2">
@@ -353,7 +353,7 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-400 font-bold shrink-0">✓</span>
-                  <span>Automated telemetry facts extraction</span>
+                  <span>Automated parameter facts extraction</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-blue-400 font-bold shrink-0">✓</span>
@@ -376,7 +376,7 @@ export default function HomePage() {
                 </p>
               </div>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Deep mission intelligence cockpit featuring interactive topological orbital digital twins, 6 verified telemetry channels, and comprehensive NASA-standard flight roadmaps with step-by-step verification directives.
+                Deep mission intelligence cockpit featuring interactive topological orbital dependency models, 6 extracted or derived mission variables, and preliminary mission assessments with step-by-step operational directives.
               </p>
               <ul className="space-y-2 pt-3 border-t border-[#1e3a5f]/40 text-xs text-slate-300 font-mono">
                 <li className="flex items-start gap-2">
@@ -385,11 +385,11 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-emerald-400 font-bold shrink-0">✓</span>
-                  <span>6-channel verified telemetry flight strip</span>
+                  <span>6 extracted or derived mission variables</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-emerald-400 font-bold shrink-0">✓</span>
-                  <span>Synthesized flight action plans & directives</span>
+                  <span>Preliminary mission assessments & directives</span>
                 </li>
               </ul>
             </div>
@@ -404,20 +404,20 @@ export default function HomePage() {
                   Scenario Lab
                 </h3>
                 <p className="text-xs text-amber-400/90 font-mono font-semibold mt-0.5">
-                  Deterministic Trade-Off Simulation
+                  Rule-Based Trade-Off Simulation
                 </p>
               </div>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Stress-test mission envelopes with deterministic aerospace physics models. Simulate solar blackouts, duration expansions, and communication delays with real-time cascading fault trees and NASA safety standards.
+                Stress-test mission envelopes with rule-based mission calculations. Simulate solar blackouts, duration expansions, and communication delays with dependency and cascading-risk visualization and reference-based safety heuristics.
               </p>
               <ul className="space-y-2 pt-3 border-t border-[#1e3a5f]/40 text-xs text-slate-300 font-mono">
                 <li className="flex items-start gap-2">
                   <span className="text-amber-400 font-bold shrink-0">✓</span>
-                  <span>Non-linear Peukert battery & power autonomy</span>
+                  <span>Rule-based Peukert battery & power autonomy</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-amber-400 font-bold shrink-0">✓</span>
-                  <span>Cascading fault trees across subsystems</span>
+                  <span>Dependency and cascading-risk visualization across subsystems</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-amber-400 font-bold shrink-0">✓</span>
@@ -519,10 +519,10 @@ export default function HomePage() {
                 3
               </div>
               <h3 className="text-base font-bold text-white">
-                Interactive digital twin
+                Interactive mission dependency model
               </h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Explore real-time topological graphs, stress-test variables, and model cascading subsystem impacts.
+                Explore simulated topological graphs, stress-test variables, and model cascading subsystem impacts.
               </p>
             </div>
 
@@ -535,7 +535,7 @@ export default function HomePage() {
                 Deploy flight intelligence
               </h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Export comprehensive mission briefs, trade-off sensitivity reports, and engineering countermeasures.
+                Export preliminary mission assessments, trade-off sensitivity reports, and engineering countermeasures.
               </p>
             </div>
           </div>
@@ -551,7 +551,7 @@ export default function HomePage() {
               Built for aerospace mission teams
             </h2>
             <p className="text-slate-400 text-sm sm:text-base max-w-lg mx-auto">
-              From concept architecture to orbital flight ops — EnPlanIt provides a unified cognitive cockpit.
+              From concept architecture to preliminary mission analysis — EnPlanIt provides a unified cognitive cockpit.
             </p>
           </div>
 
@@ -563,7 +563,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-sm font-bold text-white">Mission Architects</h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Rapidly evaluate feasibility, payload mass budgets, trajectory margins, and lunar/Martian landing windows.
+                Rapidly evaluate feasibility, payload mass budgets, resource margins, and lunar/Martian surface stay feasibility.
               </p>
             </div>
 
@@ -612,23 +612,23 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-3">
               <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold shrink-0">✓</span>
-              <span>Deterministic NASA-STD-3001 life-support models</span>
+              <span>Reference-based safety heuristics</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold shrink-0">✓</span>
-              <span>Real-time orbital telemetry graph with interactive digital twins</span>
+              <span>Simulated mission telemetry visualization with interactive dependency models</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold shrink-0">✓</span>
-              <span>Non-linear physical cascading simulation & trade-off engine</span>
+              <span>Rule-based mission calculations & trade-off engine</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold shrink-0">✓</span>
-              <span>Multi-subsystem risk evaluation & cascading fault alerts</span>
+              <span>Multi-subsystem risk evaluation & cascading risk alerts</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px] font-bold shrink-0">✓</span>
-              <span>Role-based mission access & cloud telemetry persistence</span>
+              <span>Role-specific workspace views & cloud mission persistence</span>
             </div>
           </div>
         </section>
