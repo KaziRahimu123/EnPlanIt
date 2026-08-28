@@ -99,7 +99,7 @@ def _get_owned_mission(mission_id: str, auth0_sub: str) -> dict:
     row = result.data[0]
     sub = (auth0_sub or "").strip()
     clean = sub.split("|")[-1] if "|" in sub else sub
-    row_sub = (row.get("auth0_sub") or row.get("user_id") or "").strip()
+    row_sub = (row.get("auth0_sub") or "").strip()
     clean_row = row_sub.split("|")[-1] if "|" in row_sub else row_sub
 
     if row_sub and sub and row_sub != sub and clean_row != clean and clean_row != sub and row_sub != clean:
@@ -166,7 +166,7 @@ async def list_missions(
         missions_result = (
             sb.table("missions")
             .select("*")
-            .or_(f"auth0_sub.eq.{user_sub},user_id.eq.{user_sub},auth0_sub.eq.{clean_sub},user_id.eq.{clean_sub}")
+            .or_(f"auth0_sub.eq.{user_sub},auth0_sub.eq.{clean_sub}")
             .order("created_at", desc=True)
             .execute()
         )
@@ -192,7 +192,7 @@ async def list_missions(
                 .execute()
             )
             if unassigned_result.data:
-                sb.table("missions").update({"auth0_sub": user_sub, "user_id": user_sub}).is_("auth0_sub", "null").execute()
+                sb.table("missions").update({"auth0_sub": user_sub}).is_("auth0_sub", "null").execute()
                 missions = unassigned_result.data
         except Exception:
             pass

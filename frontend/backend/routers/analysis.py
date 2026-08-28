@@ -56,7 +56,7 @@ def _save_analysis(
             sb.table("missions")
             .select("id")
             .eq("id", mission_id)
-            .or_(f"auth0_sub.eq.{sub},user_id.eq.{sub},auth0_sub.eq.{clean},user_id.eq.{clean}")
+            .or_(f"auth0_sub.eq.{sub},auth0_sub.eq.{clean}")
             .limit(1)
             .execute()
         )
