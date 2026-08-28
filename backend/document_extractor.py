@@ -11,7 +11,8 @@ from __future__ import annotations
 import io
 import logging
 import re
-from typing import Any
+import zipfile
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,62 @@ logger = logging.getLogger(__name__)
 _CHUNK_CHARS = 3000
 # Overlap between consecutive chunks (character count)
 _CHUNK_OVERLAP = 300
+
+
+def validate_file_signature(content: bytes, file_type: str) -> tuple[bool, Optional[str]]:
+    """
+    Validate MIME type and file magic bytes/signature against declared file_type.
+    Prevents disguised binaries, corrupted payloads, or arbitrary file execution.
+    """
+    if not content:
+        return False, "File is empty (0 bytes)."
+
+    ft = file_type.lower().strip().lstrip(".")
+
+    # Disallow known executable magic headers regardless of declared extension
+    if content.startswith(b"\x7fELF"):
+        return False, "Executable binaries (ELF) are not permitted."
+    if content.startswith(b"MZ"):
+        return False, "Executable binaries (DOS/PE) are not permitted."
+    if content.startswith((b"\xca\xfe\xba\xbe", b"\xfe\xed\xfa\xce", b"\xfe\xed\xfa\xcf", b"\xce\xfa\xed\xfe", b"\xcf\xfa\xed\xfe")):
+        return False, "Executable binaries (Mach-O / Java bytecode) are not permitted."
+
+    if ft == "pdf":
+        # PDF magic bytes: %PDF-
+        if not content.startswith(b"%PDF"):
+            # Check if there's minor preamble (up to 1024 bytes)
+            if b"%PDF" not in content[:1024]:
+                return False, "Invalid PDF: missing '%PDF' header signature."
+        return True, None
+
+    elif ft == "docx":
+        # DOCX is an OpenXML ZIP container starting with PK\x03\x04
+        if not content.startswith(b"PK\x03\x04"):
+            return False, "Invalid DOCX: missing ZIP container signature."
+        try:
+            with zipfile.ZipFile(io.BytesIO(content)) as zf:
+                namelist = zf.namelist()
+                if not any("word/" in name or "[Content_Types].xml" in name for name in namelist):
+                    return False, "Invalid DOCX: missing WordprocessingML document structure."
+        except Exception as exc:
+            return False, f"Invalid DOCX archive: {exc}"
+        return True, None
+
+    elif ft in ("txt", "md"):
+        # Text / Markdown files: ensure no binary null bytes in initial chunk
+        null_count = content[:2048].count(b"\x00")
+        if null_count > 0:
+            return False, "Binary file detected with text file extension."
+        try:
+            content.decode("utf-8")
+        except UnicodeDecodeError:
+            try:
+                content.decode("latin-1")
+            except Exception as exc:
+                return False, f"Invalid text encoding: {exc}"
+        return True, None
+
+    return False, f"Unsupported file format '{file_type}'."
 
 
 def extract_text_from_pdf(content: bytes) -> list[dict[str, Any]]:

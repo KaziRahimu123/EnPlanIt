@@ -29,8 +29,10 @@ function StatusPill({ status }: { status: MissionDocument["status"] }) {
   const cfg = {
     uploaded:   { label: "Uploaded",   cls: "border-[var(--border)] text-[var(--text-muted)]" },
     processing: { label: "Processing", cls: "border-[var(--accent)]/40 text-[var(--accent-glow)] animate-pulse" },
-    ready:      { label: "Ready",      cls: "border-[var(--green)]/40 text-[var(--green)]" },
-    error:      { label: "Error",      cls: "border-[var(--red)]/40 text-red-400" },
+    completed:  { label: "Completed",  cls: "border-[var(--green)]/40 text-[var(--green)]" },
+    ready:      { label: "Completed",  cls: "border-[var(--green)]/40 text-[var(--green)]" },
+    failed:     { label: "Failed",     cls: "border-[var(--red)]/40 text-red-400" },
+    error:      { label: "Failed",     cls: "border-[var(--red)]/40 text-red-400" },
   }[status] ?? { label: status, cls: "border-[var(--border)] text-[var(--text-muted)]" };
 
   return (

@@ -469,7 +469,7 @@ export interface MissionDocument {
   filename: string;
   file_type: string;
   file_size: number;
-  status: "uploaded" | "processing" | "ready" | "error";
+  status: "uploaded" | "processing" | "completed" | "failed" | "ready" | "error";
   page_count?: number | null;
   word_count?: number | null;
   error_message?: string | null;
@@ -499,21 +499,99 @@ export interface MissionFactsResponse {
   has_documents: boolean;
 }
 
-export async function uploadDocument(
+export interface UploadUrlResponse {
+  document_id: string;
+  storage_path: string;
+  signed_url: string;
+  token: string;
+  expires_in: number;
+}
+
+export async function requestDocumentUploadUrl(
   missionId: string,
-  file: File,
-): Promise<MissionDocument> {
-  const form = new FormData();
-  form.append("file", file);
-  const res = await authFetch(`${API_BASE}/api/missions/${missionId}/documents`, {
+  filename: string,
+  fileSize: number,
+  fileType: string,
+): Promise<UploadUrlResponse> {
+  const res = await authFetch(`${API_BASE}/api/missions/${missionId}/documents/upload-url`, {
     method: "POST",
-    body: form,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ filename, file_size: fileSize, file_type: fileType }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error((err as { detail?: string }).detail ?? "Upload failed");
+    throw new Error(parseApiError(err, "Failed to request upload URL"));
   }
   return res.json();
+}
+
+export async function processUploadedDocument(
+  missionId: string,
+  documentId: string,
+): Promise<MissionDocument> {
+  const res = await authFetch(`${API_BASE}/api/missions/${missionId}/documents/${documentId}/process`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(parseApiError(err, "Document processing failed"));
+  }
+  return res.json();
+}
+
+export async function abortDocumentUpload(
+  missionId: string,
+  documentId: string,
+): Promise<void> {
+  await authFetch(`${API_BASE}/api/missions/${missionId}/documents/${documentId}/abort`, {
+    method: "DELETE",
+  }).catch(() => {});
+}
+
+export async function uploadDocument(
+  missionId: string,
+  file: File,
+  onProgress?: (status: string) => void,
+): Promise<MissionDocument> {
+  const ext = file.name.split(".").pop()?.toLowerCase() || "pdf";
+
+  // 1. Request signed URL from backend (enforces ownership, 3-file max, 20 MB size)
+  onProgress?.("Requesting secure storage token…");
+  const { document_id, signed_url } = await requestDocumentUploadUrl(
+    missionId,
+    file.name,
+    file.size,
+    ext,
+  );
+
+  // 2. Direct browser upload to Supabase Storage signed URL (bypasses Vercel 4.5 MB limit)
+  onProgress?.("Uploading directly to secure storage…");
+  let uploadRes: Response;
+  try {
+    uploadRes = await fetch(signed_url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": file.type || "application/octet-stream",
+      },
+      body: file,
+    });
+  } catch (fetchErr) {
+    await abortDocumentUpload(missionId, document_id);
+    throw new Error(
+      `Direct storage upload failed: ${fetchErr instanceof Error ? fetchErr.message : "Network error"}`,
+    );
+  }
+
+  if (!uploadRes.ok) {
+    await abortDocumentUpload(missionId, document_id);
+    const text = await uploadRes.text().catch(() => "");
+    throw new Error(`Storage upload failed with status ${uploadRes.status}: ${text || "Upload rejected"}`);
+  }
+
+  // 3. Trigger backend parsing, signature verification, and fact extraction
+  onProgress?.("Verifying file signature and extracting telemetry…");
+  return await processUploadedDocument(missionId, document_id);
 }
 
 export async function listDocuments(missionId: string): Promise<MissionDocument[]> {

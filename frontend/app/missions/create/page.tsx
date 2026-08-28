@@ -64,9 +64,11 @@ function CreateMissionContent() {
       const uploadErrors: string[] = [];
       for (let i = 0; i < stagedFiles.length; i++) {
         const file = stagedFiles[i];
-        setUploadProgress(`Uploading and processing document ${i + 1} of ${stagedFiles.length}: ${file.name}`);
+        setUploadProgress(`Document ${i + 1} of ${stagedFiles.length} (${file.name}): Preparing direct upload…`);
         try {
-          await uploadDocument(mission.id, file);
+          await uploadDocument(mission.id, file, (stage) => {
+            setUploadProgress(`Document ${i + 1}/${stagedFiles.length} (${file.name}): ${stage}`);
+          });
         } catch (err) {
           uploadErrors.push(
             `"${file.name}": ${err instanceof Error ? err.message : "upload failed"}`,
