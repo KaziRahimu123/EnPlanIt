@@ -5,7 +5,7 @@ Welcome IBM Challenge Judges! Follow these 5 quick steps to test EnPlanIt on the
 ---
 
 ### Step 1: Open the Live Application
-Visit [https://enplanit.vercel.app](https://enplanit.vercel.app) and click **"Sign In"** or **"Launch Mission Cockpit"** to log in via Auth0.
+Visit [https://enplanit-web.vercel.app/](https://enplanit-web.vercel.app/) and click **"Sign In"** or **"Launch Mission Cockpit"** to log in via Auth0.
 
 ### Step 2: Ingest Mission Flight Specs (Multi-Source Ingestion)
 Go to `/missions/create` and upload a spaceflight dossier (PDF, DOCX, TXT, MD up to 3 files / 20 MB) or enter a natural-language mission concept (e.g. *Artemis Base Alpha 365-Day Crewed Lunar Outpost*).
