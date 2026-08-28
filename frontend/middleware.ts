@@ -10,7 +10,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  return await auth0.middleware(request);
+  try {
+    return await auth0.middleware(request);
+  } catch (error) {
+    console.error("Auth middleware error:", error);
+    if (url.pathname.startsWith("/auth/callback") || url.pathname.startsWith("/auth/login")) {
+      return NextResponse.redirect(new URL("/?auth_error=1", request.url));
+    }
+    return NextResponse.next();
+  }
 }
 
 export const config = {

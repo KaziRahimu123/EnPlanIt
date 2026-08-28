@@ -10,11 +10,22 @@ const clientId = process.env.AUTH0_CLIENT_ID?.trim();
 const clientSecret = process.env.AUTH0_CLIENT_SECRET?.trim();
 const secret = process.env.AUTH0_SECRET?.trim();
 
-const appBaseUrl = (
-  process.env.APP_BASE_URL?.trim() ||
-  process.env.AUTH0_BASE_URL?.trim() ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL.trim()}` : undefined) ||
-  (process.env.NODE_ENV === "production" ? undefined : "http://localhost:3000")
+const allowedOrigins: string[] = [];
+if (process.env.APP_BASE_URL?.trim()) allowedOrigins.push(process.env.APP_BASE_URL.trim());
+if (process.env.AUTH0_BASE_URL?.trim()) allowedOrigins.push(process.env.AUTH0_BASE_URL.trim());
+if (process.env.VERCEL_URL?.trim()) allowedOrigins.push(`https://${process.env.VERCEL_URL.trim()}`);
+allowedOrigins.push("http://localhost:3000", "http://127.0.0.1:3000");
+
+const uniqueAllowedOrigins = Array.from(
+  new Set(
+    allowedOrigins.map((u) => {
+      try {
+        return new URL(u).origin;
+      } catch {
+        return u;
+      }
+    })
+  )
 );
 
 const authParams: Record<string, string> = {
@@ -38,7 +49,7 @@ export const auth0 = new Auth0Client({
   clientId,
   clientSecret,
   secret,
-  ...(appBaseUrl ? { appBaseUrl } : {}),
+  appBaseUrl: uniqueAllowedOrigins,
   signInReturnToPath: "/dashboard",
   authorizationParameters: authParams,
 });

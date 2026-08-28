@@ -251,30 +251,24 @@ export default function HomePage() {
 
             {/* Dual CTA Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-              {!isLoading && !user ? (
+              {!user ? (
                 <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      window.location.assign("/auth/login?returnTo=/missions/create");
-                    }}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/25 transition-all text-sm sm:text-base group cursor-pointer border-none"
+                  <a
+                    href="/auth/login?returnTo=/missions/create"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-500/25 transition-all text-sm sm:text-base group cursor-pointer border-none no-underline"
                   >
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="opacity-90">
                       <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                     Create Mission
                     <span className="group-hover:translate-x-1 transition-transform">→</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      window.location.assign("/auth/login?returnTo=/dashboard");
-                    }}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-slate-200 border border-slate-700 bg-slate-900/60 hover:bg-slate-800/80 transition-all text-sm sm:text-base cursor-pointer"
+                  </a>
+                  <a
+                    href="/auth/login?returnTo=/dashboard"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-slate-200 border border-slate-700 bg-slate-900/60 hover:bg-slate-800/80 transition-all text-sm sm:text-base cursor-pointer no-underline"
                   >
                     View Dashboard
-                  </button>
+                  </a>
                 </>
               ) : (
                 <>

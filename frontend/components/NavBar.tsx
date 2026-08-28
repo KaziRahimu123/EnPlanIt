@@ -179,11 +179,8 @@ export default function NavBar() {
                     <div className="p-1.5" style={{ backgroundColor: "#080f20" }}>
                       <a
                         href="/auth/logout"
-                        className="flex items-center gap-2.5 w-full px-3.5 py-2.5 rounded-lg text-xs font-semibold text-red-400 hover:text-white hover:bg-red-500/20 transition-all cursor-pointer"
-                        onClick={() => {
-                          setAccountOpen(false);
-                          window.location.href = "/auth/logout";
-                        }}
+                        className="flex items-center gap-2.5 w-full px-3.5 py-2.5 rounded-lg text-xs font-semibold text-red-400 hover:text-white hover:bg-red-500/20 transition-all cursor-pointer no-underline"
+                        onClick={() => setAccountOpen(false)}
                       >
                         <svg
                           width="14"
@@ -209,15 +206,10 @@ export default function NavBar() {
             )}
 
             {/* LOGGED OUT — Sign In button */}
-            {!isLoading && !user && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  window.location.assign("/auth/login?returnTo=/dashboard");
-                }}
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold text-white transition-all cursor-pointer"
+            {!user && (
+              <a
+                href="/auth/login?returnTo=/dashboard"
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold text-white transition-all cursor-pointer no-underline"
                 style={{
                   background: "linear-gradient(135deg, var(--accent-dim), var(--accent))",
                   boxShadow: "0 0 10px rgba(59,130,246,0.25)",
@@ -225,7 +217,7 @@ export default function NavBar() {
                 }}
               >
                 Sign In
-              </button>
+              </a>
             )}
 
           </div>

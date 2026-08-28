@@ -1,10 +1,7 @@
-import { auth0 } from "@/lib/auth0";
-import type { NextRequest } from "next/server";
-
-export async function GET(request: NextRequest) {
-  return await auth0.middleware(request);
-}
-
-export async function POST(request: NextRequest) {
-  return await auth0.middleware(request);
-}
+// Auth0 v4 routes are handled exclusively by middleware.ts
+// Login:    /auth/login
+// Callback: /auth/callback
+// Logout:   /auth/logout
+// Profile:  /auth/profile
+// Token:    /auth/access-token
+export {};
