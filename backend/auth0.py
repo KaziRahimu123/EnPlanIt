@@ -34,7 +34,11 @@ logger = logging.getLogger(__name__)
 # Configuration
 # ---------------------------------------------------------------------------
 
-AUTH0_DOMAIN: str = os.getenv("AUTH0_DOMAIN", "")
+AUTH0_DOMAIN: str = (
+    os.getenv("AUTH0_DOMAIN", "").strip().replace("https://", "").replace("http://", "").rstrip("/")
+    or os.getenv("AUTH0_ISSUER_BASE_URL", "").strip().replace("https://", "").replace("http://", "").rstrip("/")
+    or "dev-jtfzglakt184mmu5.us.auth0.com"
+)
 AUTH0_CLIENT_ID: str = os.getenv("AUTH0_CLIENT_ID", "")
 AUTH0_CLIENT_SECRET: str = os.getenv("AUTH0_CLIENT_SECRET", "")
 AUTH0_SECRET: str = os.getenv("AUTH0_SECRET", "")
@@ -62,7 +66,8 @@ def _get_jwks() -> dict:
         raise RuntimeError("AUTH0_DOMAIN is not configured — cannot fetch JWKS")
     resp = httpx.get(_JWKS_URI, timeout=10)
     resp.raise_for_status()
-_userinfo_cache: dict[str, dict] = {}
+    _jwks_cache = resp.json()
+    return _jwks_cache
 
 
 def _fetch_userinfo(token: str) -> Optional[dict]:
