@@ -204,19 +204,31 @@ export async function createMission(payload: MissionPayload): Promise<Mission> {
 
 export async function listMissions(): Promise<Mission[]> {
   const res = await authFetch(`${API_BASE}/api/missions`);
-  if (!res.ok) throw new Error("Failed to fetch missions");
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const msg = (err as { detail?: string; error?: string }).detail || (err as { error?: string }).error || `Failed to fetch missions (HTTP ${res.status})`;
+    throw new Error(msg);
+  }
   return res.json();
 }
 
 export async function getMission(id: string): Promise<Mission> {
   const res = await authFetch(`${API_BASE}/api/missions/${id}`);
-  if (!res.ok) throw new Error("Mission not found");
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const msg = (err as { detail?: string; error?: string }).detail || (err as { error?: string }).error || "Mission not found";
+    throw new Error(msg);
+  }
   return res.json();
 }
 
 export async function deleteMission(id: string): Promise<void> {
   const res = await authFetch(`${API_BASE}/api/missions/${id}`, { method: "DELETE" });
-  if (!res.ok) throw new Error("Failed to delete mission");
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const msg = (err as { detail?: string; error?: string }).detail || (err as { error?: string }).error || "Failed to delete mission";
+    throw new Error(msg);
+  }
 }
 
 // ---------------------------------------------------------------------------

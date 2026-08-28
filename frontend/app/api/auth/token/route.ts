@@ -11,17 +11,27 @@ export async function GET() {
       );
     }
 
-    // Only return the authentic RS256 Auth0 ID token from the verified session
-    const idToken = session.tokenSet?.idToken;
-    if (!idToken) {
+    // Retrieve RS256 ID token or access token from the verified Auth0 session
+    const s = session as unknown as Record<string, unknown>;
+    const tokenSet = (s.tokenSet as Record<string, unknown>) || {};
+    
+    const validToken =
+      (typeof s.idToken === "string" && s.idToken) ||
+      (typeof tokenSet.idToken === "string" && tokenSet.idToken) ||
+      (typeof tokenSet.id_token === "string" && tokenSet.id_token) ||
+      (typeof s.accessToken === "string" && s.accessToken) ||
+      (typeof tokenSet.accessToken === "string" && tokenSet.accessToken) ||
+      (typeof tokenSet.access_token === "string" && tokenSet.access_token);
+
+    if (!validToken) {
       return NextResponse.json(
-        { error: "No RS256 ID token present in active session" },
+        { error: "No RS256 token present in active session" },
         { status: 401 }
       );
     }
 
     return NextResponse.json({
-      token: idToken,
+      token: validToken,
       user: session.user,
     });
   } catch (err) {
