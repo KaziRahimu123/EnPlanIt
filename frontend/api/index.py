@@ -3,11 +3,21 @@
 import sys
 import os
 
-# Ensure backend directory is in sys.path
-backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "backend"))
-if not os.path.exists(backend_dir):
-    backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend"))
-if backend_dir not in sys.path:
+# Locate the backend directory in any deployment context
+current_dir = os.path.dirname(os.path.abspath(__file__))
+candidate_dirs = [
+    os.path.join(current_dir, "backend"),
+    os.path.join(current_dir, "..", "backend"),
+    os.path.join(current_dir, "..", "..", "backend"),
+]
+
+backend_dir = None
+for c_dir in candidate_dirs:
+    if os.path.isdir(c_dir) and os.path.isfile(os.path.join(c_dir, "main.py")):
+        backend_dir = os.path.abspath(c_dir)
+        break
+
+if backend_dir and backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
-from backend.main import app
+from main import app

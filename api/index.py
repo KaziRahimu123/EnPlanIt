@@ -3,12 +3,20 @@
 import sys
 import os
 
-# Ensure backend directory is in sys.path
-backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend"))
-root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-if backend_dir not in sys.path:
-    sys.path.insert(0, backend_dir)
-if root_dir not in sys.path:
-    sys.path.insert(0, root_dir)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+candidate_dirs = [
+    os.path.join(current_dir, "backend"),
+    os.path.join(current_dir, "..", "backend"),
+    os.path.join(current_dir, "..", "frontend", "backend"),
+]
 
-from backend.main import app
+backend_dir = None
+for c_dir in candidate_dirs:
+    if os.path.isdir(c_dir) and os.path.isfile(os.path.join(c_dir, "main.py")):
+        backend_dir = os.path.abspath(c_dir)
+        break
+
+if backend_dir and backend_dir not in sys.path:
+    sys.path.insert(0, backend_dir)
+
+from main import app
