@@ -38,22 +38,6 @@ These relationships are often reviewed through separate documents, spreadsheets,
 
 EnPlanIt provides an integrated workflow for transforming mission documentation into explorable mission intelligence.
 
-```mermaid
-flowchart TD
-    A["Mission concept or uploaded dossier"]
-    B["Document extraction and fact classification"]
-    C["IBM Granite mission synthesis"]
-    D["Interactive subsystem map"]
-    E["Deterministic scenario simulation"]
-    F["Risk pathways and investigation steps"]
-
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
-```
-
 ### Three core intelligence engines
 
 1. **Mission Creation and Ingestion:** Users can describe a mission concept in natural language or upload supporting PDF, DOCX, TXT, and Markdown documents. EnPlanIt extracts relevant mission facts, identifies unspecified information, and constructs a structured mission profile.
