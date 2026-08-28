@@ -24,6 +24,30 @@ async function getClientAccessToken(): Promise<string | null> {
   if (_tokenPromise) return _tokenPromise;
 
   _tokenPromise = (async () => {
+    // 1. First attempt: retrieve verified token from /api/auth/token route
+    try {
+      const res = await fetch("/api/auth/token", { credentials: "same-origin" });
+      if (res.ok) {
+        const data = await res.json();
+        if (
+          data?.token &&
+          typeof data.token === "string" &&
+          data.token.trim() &&
+          data.token !== "undefined" &&
+          data.token !== "null"
+        ) {
+          _cachedAccessToken = data.token.trim();
+          setTimeout(() => {
+            _cachedAccessToken = null;
+          }, 120000); // 2 minute cache
+          return _cachedAccessToken;
+        }
+      }
+    } catch {
+      // Proceed to fallback
+    }
+
+    // 2. Second attempt: fallback to client SDK getAccessToken
     try {
       const { getAccessToken } = await import("@auth0/nextjs-auth0/client");
       const token = await Promise.race([
