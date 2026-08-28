@@ -153,14 +153,20 @@ def _verify_mission_ownership(mission_id: str, auth0_sub: str) -> None:
     sb = get_supabase()
     result = (
         sb.table("missions")
-        .select("id, auth0_sub")
+        .select("id, auth0_sub, user_id")
         .eq("id", mission_id)
         .limit(1)
         .execute()
     )
     if not result.data:
         raise HTTPException(status_code=404, detail="Mission not found")
-    if result.data[0].get("auth0_sub") != auth0_sub:
+    
+    sub = (auth0_sub or "").strip()
+    clean = sub.split("|")[-1] if "|" in sub else sub
+    row_sub = (result.data[0].get("auth0_sub") or result.data[0].get("user_id") or "").strip()
+    clean_row = row_sub.split("|")[-1] if "|" in row_sub else row_sub
+
+    if row_sub and sub and row_sub != sub and clean_row != clean and clean_row != sub and row_sub != clean:
         raise HTTPException(status_code=403, detail="Access denied")
 
 

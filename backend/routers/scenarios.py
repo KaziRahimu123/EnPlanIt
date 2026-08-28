@@ -573,12 +573,13 @@ def _save_scenario(
     """Upsert scenario results for a mission. Logs failures and returns persistence status."""
     try:
         sb = get_supabase()
-        # Verify ownership — .limit(1).execute() always returns APIResponse(.data=[...])
+        sub = (auth0_sub or "").strip()
+        clean = sub.split("|")[-1] if "|" in sub else sub
         mission = (
             sb.table("missions")
             .select("id")
             .eq("id", mission_id)
-            .eq("auth0_sub", auth0_sub)
+            .or_(f"auth0_sub.eq.{sub},user_id.eq.{sub},auth0_sub.eq.{clean},user_id.eq.{clean}")
             .limit(1)
             .execute()
         )
@@ -633,11 +634,13 @@ def _save_scenario_insights(
         return False, "No insights data provided"
     try:
         sb = get_supabase()
+        sub = (auth0_sub or "").strip()
+        clean = sub.split("|")[-1] if "|" in sub else sub
         mission = (
             sb.table("missions")
             .select("id")
             .eq("id", mission_id)
-            .eq("auth0_sub", auth0_sub)
+            .or_(f"auth0_sub.eq.{sub},user_id.eq.{sub},auth0_sub.eq.{clean},user_id.eq.{clean}")
             .limit(1)
             .execute()
         )
@@ -998,11 +1001,13 @@ async def get_saved_scenario(
 ) -> SavedScenarioResponse:
     """Return saved scenario data for a mission. Enforces ownership."""
     sb = get_supabase()
+    sub = (current_user.get("sub") or "").strip()
+    clean = sub.split("|")[-1] if "|" in sub else sub
     mission = (
         sb.table("missions")
         .select("id")
         .eq("id", mission_id)
-        .eq("auth0_sub", current_user["sub"])
+        .or_(f"auth0_sub.eq.{sub},user_id.eq.{sub},auth0_sub.eq.{clean},user_id.eq.{clean}")
         .limit(1)
         .execute()
     )
@@ -1089,12 +1094,14 @@ async def get_before_values(
     Return BEFORE values for the Scenario Lab, derived from mission facts and extracted metadata.
     """
     sb = get_supabase()
+    sub = (current_user.get("sub") or "").strip()
+    clean = sub.split("|")[-1] if "|" in sub else sub
     # Ownership check & load all mission extraction fields
     mission_res = (
         sb.table("missions")
         .select("id, duration, destination, power_source, known_resources, description, mission_type")
         .eq("id", mission_id)
-        .eq("auth0_sub", current_user["sub"])
+        .or_(f"auth0_sub.eq.{sub},user_id.eq.{sub},auth0_sub.eq.{clean},user_id.eq.{clean}")
         .limit(1)
         .execute()
     )

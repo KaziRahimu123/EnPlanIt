@@ -26,11 +26,25 @@ function DashboardContent() {
   const displayName = user?.name ?? user?.email ?? "";
   const roleMeta = role ? ROLE_META[role] : null;
 
-  useEffect(() => {
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const fetchMissions = () => {
+    setLoading(true);
+    setLoadError(null);
     listMissions()
-      .then(setMissions)
-      .catch(() => setMissions([]))
+      .then((data) => {
+        setMissions(data || []);
+        setLoadError(null);
+      })
+      .catch((err) => {
+        setLoadError(err instanceof Error ? err.message : "Failed to load missions.");
+        setMissions([]);
+      })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchMissions();
   }, []);
 
   async function handleDelete(id: string) {
@@ -131,6 +145,16 @@ function DashboardContent() {
         {loading ? (
           <div className="px-5 py-8 text-center text-sm text-[var(--text-muted)]">
             Loading missions…
+          </div>
+        ) : loadError ? (
+          <div className="px-5 py-8 text-center space-y-3">
+            <div className="text-red-400 text-sm font-mono font-semibold">⚠️ {loadError}</div>
+            <button
+              onClick={fetchMissions}
+              className="px-4 py-1.5 rounded-lg border border-sky-500/40 bg-sky-500/10 text-sky-300 text-xs font-mono hover:bg-sky-500/20 transition-colors"
+            >
+              🔄 Retry
+            </button>
           </div>
         ) : missions.length === 0 ? (
           <div className="px-5 py-12 text-center">

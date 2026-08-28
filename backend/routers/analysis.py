@@ -50,12 +50,13 @@ def _save_analysis(
     """Persist analysis results to Supabase. Logs failures and returns persistence confirmation."""
     try:
         sb = get_supabase()
-        # Verify ownership — .limit(1) guarantees an APIResponse with .data list
+        sub = (auth0_sub or "").strip()
+        clean = sub.split("|")[-1] if "|" in sub else sub
         mission = (
             sb.table("missions")
             .select("id")
             .eq("id", mission_id)
-            .eq("auth0_sub", auth0_sub)
+            .or_(f"auth0_sub.eq.{sub},user_id.eq.{sub},auth0_sub.eq.{clean},user_id.eq.{clean}")
             .limit(1)
             .execute()
         )

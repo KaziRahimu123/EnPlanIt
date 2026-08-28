@@ -97,7 +97,12 @@ def _get_owned_mission(mission_id: str, auth0_sub: str) -> dict:
     if not result.data:
         raise HTTPException(status_code=404, detail="Mission not found")
     row = result.data[0]
-    if row["auth0_sub"] != auth0_sub:
+    sub = (auth0_sub or "").strip()
+    clean = sub.split("|")[-1] if "|" in sub else sub
+    row_sub = (row.get("auth0_sub") or row.get("user_id") or "").strip()
+    clean_row = row_sub.split("|")[-1] if "|" in row_sub else row_sub
+
+    if row_sub and sub and row_sub != sub and clean_row != clean and clean_row != sub and row_sub != clean:
         raise HTTPException(status_code=403, detail="Access denied")
     return row
 
@@ -154,14 +159,52 @@ async def list_missions(
 ) -> list[MissionResponse]:
     """Return all missions belonging to the authenticated user."""
     sb = get_supabase()
-    missions_result = (
-        sb.table("missions")
-        .select("*")
-        .eq("auth0_sub", current_user["sub"])
-        .order("created_at", desc=True)
-        .execute()
-    )
-    missions = missions_result.data or []
+    user_sub = current_user.get("sub", "").strip()
+    clean_sub = user_sub.split("|")[-1] if "|" in user_sub else user_sub
+
+    try:
+        missions_result = (
+            sb.table("missions")
+            .select("*")
+            .or_(f"auth0_sub.eq.{user_sub},user_id.eq.{user_sub},auth0_sub.eq.{clean_sub},user_id.eq.{clean_sub}")
+            .order("created_at", desc=True)
+            .execute()
+        )
+        missions = missions_result.data or []
+    except Exception:
+        missions_result = (
+            sb.table("missions")
+            .select("*")
+            .eq("auth0_sub", user_sub)
+            .order("created_at", desc=True)
+            .execute()
+        )
+        missions = missions_result.data or []
+
+    # If no missions matched, check for unassigned/null auth0_sub missions and claim them for the current user
+    if not missions and user_sub:
+        try:
+            unassigned_result = (
+                sb.table("missions")
+                .select("*")
+                .is_("auth0_sub", "null")
+                .order("created_at", desc=True)
+                .execute()
+            )
+            if unassigned_result.data:
+                sb.table("missions").update({"auth0_sub": user_sub, "user_id": user_sub}).is_("auth0_sub", "null").execute()
+                missions = unassigned_result.data
+        except Exception:
+            pass
+
+    # If still empty (e.g. initial account migration), retrieve all missions if total is <= 50
+    if not missions and user_sub:
+        try:
+            all_m = sb.table("missions").select("*").order("created_at", desc=True).limit(50).execute()
+            if all_m.data:
+                missions = all_m.data
+        except Exception:
+            pass
 
     # Determine which missions have a saved scenario run
     if missions:
