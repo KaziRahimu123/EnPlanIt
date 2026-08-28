@@ -1,8 +1,8 @@
-<div align="center">
-  <img src="./frontend/public/logo.png" alt="EnPlanIt Logo" width="96" height="96" />
-  <h1>ENPLANIT</h1>
-  <p><strong>Enlighten your mission. Plan it to perfection.</strong></p>
-</div>
+![EnPlanIt Banner](./frontend/public/images/enplanit-banner.png)
+
+# ENPLANIT
+
+**Enlighten your mission. Plan it to perfection.**
 
 EnPlanIt is a unified aerospace mission intelligence and scenario simulation platform for mission architects, systems engineers, mission risk and safety analysts, flight operations teams, and space exploration enthusiasts. It transforms mission concepts and uploaded flight dossiers into structured mission profiles, interactive subsystem maps, milestone roadmaps, and deterministic what-if simulations.
 
@@ -186,8 +186,8 @@ IBM Bob served as an AI pair-programming partner and systems-design assistant th
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/TasinKazi/AstroOps.git
-cd AstroOps
+git clone https://github.com/KaziRahimu123/EnPlanIt.git
+cd EnPlanIt
 ```
 
 ### 2. Configure environment variables
@@ -232,6 +232,12 @@ Open `http://localhost:3000` in your browser.
 ## Prototype notice
 
 EnPlanIt is a challenge prototype intended for mission-planning exploration, education, and scenario analysis. It is not a certified aerospace engineering or flight-safety system. Its outputs should be independently verified before they are used in operational, safety-critical, or mission-critical decisions.
+
+---
+
+## License
+
+This project is licensed under the Apache License 2.0. See [LICENSE](./LICENSE) for details.
 
 ---
 
