@@ -43,8 +43,8 @@ export default function RequireAuth({
     }
   }, [user, authLoading, role, roleLoading, requireRole, pathname, router]);
 
-  // Show spinner while auth or role is loading
-  if (authLoading || (requireRole && roleLoading)) {
+  // Show spinner while Auth0 session is resolving
+  if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex items-center gap-3 text-sm text-[var(--text-muted)]">
@@ -71,9 +71,6 @@ export default function RequireAuth({
 
   // Not logged in — redirect already triggered, render nothing
   if (!user) return null;
-
-  // Logged in but no role — redirect already triggered, render nothing
-  if (requireRole && !role) return null;
 
   return <>{children}</>;
 }

@@ -16,19 +16,42 @@ const API_BASE =
 
 // ---------------------------------------------------------------------------
 
+let _cachedAccessToken: string | null = null;
+let _tokenPromise: Promise<string | null> | null = null;
+
+async function getClientAccessToken(): Promise<string | null> {
+  if (_cachedAccessToken) return _cachedAccessToken;
+  if (_tokenPromise) return _tokenPromise;
+
+  _tokenPromise = (async () => {
+    try {
+      const { getAccessToken } = await import("@auth0/nextjs-auth0/client");
+      const token = await Promise.race([
+        getAccessToken(),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500)),
+      ]);
+      if (token) {
+        _cachedAccessToken = token;
+        setTimeout(() => {
+          _cachedAccessToken = null;
+        }, 120000); // 2 minute cache
+      }
+      return token;
+    } catch (err) {
+      console.warn("Auth0 getAccessToken warning:", err);
+      return null;
+    } finally {
+      _tokenPromise = null;
+    }
+  })();
+
+  return _tokenPromise;
+}
+
 async function authFetch(url: string, init: RequestInit = {}): Promise<Response> {
   let token: string | null = null;
   if (typeof window !== "undefined") {
-    try {
-      // In @auth0/nextjs-auth0 v4, the audience-scoped access token is obtained
-      // at login time (via authorizationParameters.audience in lib/auth0.ts) and
-      // stored in the encrypted session cookie. getAccessToken() reads it back —
-      // passing audience again triggers an unnecessary refresh that can fail.
-      const { getAccessToken } = await import("@auth0/nextjs-auth0/client");
-      token = await getAccessToken();
-    } catch (err) {
-      console.warn("Auth0 getAccessToken warning:", err);
-    }
+    token = await getClientAccessToken();
   }
   const headers: Record<string, string> = {
     ...(init.headers as Record<string, string> | undefined),

@@ -44,7 +44,7 @@ const RoleContext = createContext<RoleContextValue>({
 export function RoleProvider({ children }: { children: ReactNode }) {
   const { user, isLoading: authLoading } = useUser();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -53,7 +53,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       return;
     }
-    setLoading(true);
+
     const savedLocalRole =
       typeof window !== "undefined"
         ? ((localStorage.getItem(`enplanit_role_${user.sub}`) ||
@@ -61,6 +61,16 @@ export function RoleProvider({ children }: { children: ReactNode }) {
             "mission_controller") as UserRole)
         : ("mission_controller" as UserRole);
 
+    // Immediately provide optimistic local role so UI is instant and never blocked
+    setProfile({
+      auth0_sub: user.sub ?? "",
+      email: user.email,
+      name: user.name,
+      role: savedLocalRole,
+    });
+    setLoading(false);
+
+    // Sync from backend in background
     getProfile()
       .then((p) => {
         const resolvedRole = p.role || savedLocalRole || "mission_controller";
@@ -71,14 +81,8 @@ export function RoleProvider({ children }: { children: ReactNode }) {
         }
       })
       .catch(() => {
-        setProfile({
-          auth0_sub: user.sub ?? "",
-          email: user.email,
-          name: user.name,
-          role: savedLocalRole,
-        });
-      })
-      .finally(() => setLoading(false));
+        // Keep optimistic state
+      });
   }, [user, authLoading]);
 
   const setRole = useCallback(
