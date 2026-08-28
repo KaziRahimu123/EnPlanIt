@@ -178,21 +178,11 @@ def _verify_token(token: str) -> dict:
         if userinfo and "sub" in userinfo:
             payload = userinfo
 
-    # 3. Resilient development session identifier fallback
-    if payload is None:
-        if token and len(token) > 10:
-            import hashlib
-            short_hash = hashlib.sha256(token.encode("utf-8", errors="ignore")).hexdigest()[:16]
-            payload = {
-                "sub": f"auth0|session_{short_hash}",
-                "email": "user@enplanit.local",
-                "name": "EnPlanIt Operator",
-            }
-        else:
-            raise JWTError("Invalid or unrecognizable authentication token")
+    # 3. If decoding completely fails, raise authentication error
+    if payload is None or not payload.get("sub"):
+        raise JWTError("Invalid or unrecognizable authentication token")
 
     return payload
-
 
 
 # ---------------------------------------------------------------------------
@@ -203,13 +193,8 @@ def _ensure_profile(sub: str, email: str, name: str = "") -> None:
     """Upsert a profiles row in Supabase on every authenticated request.
 
     - Creates the row on first login.
-    - Updates email/name if they arrive from the token on a subsequent request
-      (Auth0 access tokens for custom audiences don't always carry these claims,
-      so we only overwrite when a non-empty value is present).
+    - Updates email/name if they arrive from the token on a subsequent request.
     - Never fails a request — profile sync is best-effort.
-
-    supabase-py 2.x: use .limit(1).execute() instead of .maybe_single()
-    which returns None on zero rows (not an APIResponse object).
     """
     try:
         from supabase_client import get_supabase
@@ -228,7 +213,6 @@ def _ensure_profile(sub: str, email: str, name: str = "") -> None:
             ).execute()
         else:
             # Subsequent login — update email/name only when the token provides them
-            # and the stored value is still empty (avoid overwriting with empty).
             row = existing.data[0]
             updates: dict = {}
             if email and not row.get("email"):
@@ -242,58 +226,10 @@ def _ensure_profile(sub: str, email: str, name: str = "") -> None:
 
 
 def _resolve_canonical_sub(sub: str, email: str, name: str = "") -> str:
-    """Resolve canonical Auth0 sub for users who log in with both Google and Email/Password.
+    """Always return the unique, stable Auth0 sub.
 
-    If the user has an existing account/profile under a different sub (e.g. google-oauth2|...
-    vs auth0|...) with the exact same verified email address:
-    - Finds the primary sub that holds existing missions.
-    - If new missions were created under the new sub, merges/migrates them to the primary sub.
-    - Returns the primary sub so all mission data is seamlessly unified.
+    Guarantees strict tenant isolation: each user only accesses their own missions.
     """
-    if not email:
-        return sub
-
-    try:
-        from supabase_client import get_supabase
-        sb = get_supabase()
-
-        # Check all profiles with this email
-        res = sb.table("profiles").select("auth0_sub, email").eq("email", email).execute()
-        if not res.data:
-            return sub
-
-        subs = [p["auth0_sub"] for p in res.data if p.get("auth0_sub")]
-        if not subs:
-            return sub
-
-        if len(subs) == 1 and subs[0] == sub:
-            return sub
-
-        # Find which sub has missions
-        primary_sub = sub
-        max_missions = -1
-        sub_mission_counts: dict[str, int] = {}
-
-        for s in subs:
-            m_res = sb.table("missions").select("id").eq("auth0_sub", s).execute()
-            count = len(m_res.data) if m_res.data else 0
-            sub_mission_counts[s] = count
-            if count > max_missions:
-                max_missions = count
-                primary_sub = s
-
-        # If the primary sub is different from the current sub, migrate any newly created missions/data to primary_sub
-        if primary_sub != sub:
-            if sub_mission_counts.get(sub, 0) > 0:
-                sb.table("missions").update({"auth0_sub": primary_sub}).eq("auth0_sub", sub).execute()
-                sb.table("scenario_runs").update({"auth0_sub": primary_sub}).eq("auth0_sub", sub).execute()
-                sb.table("mission_documents").update({"auth0_sub": primary_sub}).eq("auth0_sub", sub).execute()
-
-            return primary_sub
-
-    except Exception as exc:
-        logger.warning("Canonical sub resolution skipped: %s", exc)
-
     return sub
 
 
