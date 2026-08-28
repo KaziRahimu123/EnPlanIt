@@ -8,13 +8,26 @@
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS profiles (
   id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  auth0_sub      TEXT        NOT NULL UNIQUE,
+  auth0_sub      TEXT        UNIQUE,
   email          TEXT,
   name           TEXT,
   role           TEXT        CHECK (role IN ('mission_controller', 'risk_analyst')),
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS auth0_sub TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS role TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'user_id') THEN
+    UPDATE profiles SET auth0_sub = user_id WHERE auth0_sub IS NULL;
+  END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS profiles_auth0_sub_idx ON profiles(auth0_sub);
 CREATE INDEX IF NOT EXISTS profiles_email_idx ON profiles(email);
@@ -39,7 +52,7 @@ END $$;
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS missions (
   id                      UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  auth0_sub               TEXT        NOT NULL,
+  auth0_sub               TEXT,
   name                    TEXT        NOT NULL,
   description             TEXT        NOT NULL,
   status                  TEXT        NOT NULL DEFAULT 'draft',
@@ -58,6 +71,28 @@ CREATE TABLE IF NOT EXISTS missions (
   created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE missions ADD COLUMN IF NOT EXISTS auth0_sub TEXT;
+ALTER TABLE missions ADD COLUMN IF NOT EXISTS destination TEXT;
+ALTER TABLE missions ADD COLUMN IF NOT EXISTS mission_type TEXT;
+ALTER TABLE missions ADD COLUMN IF NOT EXISTS objective TEXT;
+ALTER TABLE missions ADD COLUMN IF NOT EXISTS duration TEXT;
+ALTER TABLE missions ADD COLUMN IF NOT EXISTS power_source TEXT;
+ALTER TABLE missions ADD COLUMN IF NOT EXISTS known_resources TEXT;
+ALTER TABLE missions ADD COLUMN IF NOT EXISTS mission_summary TEXT;
+ALTER TABLE missions ADD COLUMN IF NOT EXISTS objectives TEXT;
+ALTER TABLE missions ADD COLUMN IF NOT EXISTS required_resources TEXT;
+ALTER TABLE missions ADD COLUMN IF NOT EXISTS major_constraints TEXT;
+ALTER TABLE missions ADD COLUMN IF NOT EXISTS planning_considerations TEXT;
+ALTER TABLE missions ADD COLUMN IF NOT EXISTS missing_information TEXT;
+ALTER TABLE missions ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+ALTER TABLE missions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'missions' AND column_name = 'user_id') THEN
+    UPDATE missions SET auth0_sub = user_id WHERE auth0_sub IS NULL;
+  END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS missions_auth0_sub_idx ON missions(auth0_sub);
 CREATE INDEX IF NOT EXISTS missions_created_at_idx ON missions(created_at DESC);
@@ -79,7 +114,7 @@ END $$;
 CREATE TABLE IF NOT EXISTS mission_analyses (
   id                      UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   mission_id              UUID        NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
-  auth0_sub               TEXT        NOT NULL,
+  auth0_sub               TEXT,
   mission_summary         TEXT,
   objectives              TEXT,
   required_resources      TEXT,
@@ -90,6 +125,17 @@ CREATE TABLE IF NOT EXISTS mission_analyses (
   created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE mission_analyses ADD COLUMN IF NOT EXISTS auth0_sub TEXT;
+ALTER TABLE mission_analyses ADD COLUMN IF NOT EXISTS mission_summary TEXT;
+ALTER TABLE mission_analyses ADD COLUMN IF NOT EXISTS objectives TEXT;
+ALTER TABLE mission_analyses ADD COLUMN IF NOT EXISTS required_resources TEXT;
+ALTER TABLE mission_analyses ADD COLUMN IF NOT EXISTS major_constraints TEXT;
+ALTER TABLE mission_analyses ADD COLUMN IF NOT EXISTS planning_considerations TEXT;
+ALTER TABLE mission_analyses ADD COLUMN IF NOT EXISTS missing_information TEXT;
+ALTER TABLE mission_analyses ADD COLUMN IF NOT EXISTS analyzed_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+ALTER TABLE mission_analyses ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+ALTER TABLE mission_analyses ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
 CREATE INDEX IF NOT EXISTS mission_analyses_mission_id_idx ON mission_analyses(mission_id);
 CREATE INDEX IF NOT EXISTS mission_analyses_auth0_sub_idx ON mission_analyses(auth0_sub);
@@ -111,7 +157,7 @@ END $$;
 CREATE TABLE IF NOT EXISTS scenario_runs (
   id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   mission_id      UUID        NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
-  auth0_sub       TEXT        NOT NULL,
+  auth0_sub       TEXT,
   before_vars     JSONB       NOT NULL DEFAULT '{}'::jsonb,
   after_vars      JSONB       NOT NULL DEFAULT '{}'::jsonb,
   concerns_before JSONB       NOT NULL DEFAULT '{}'::jsonb,
@@ -123,6 +169,24 @@ CREATE TABLE IF NOT EXISTS scenario_runs (
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE scenario_runs ADD COLUMN IF NOT EXISTS auth0_sub TEXT;
+ALTER TABLE scenario_runs ADD COLUMN IF NOT EXISTS before_vars JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE scenario_runs ADD COLUMN IF NOT EXISTS after_vars JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE scenario_runs ADD COLUMN IF NOT EXISTS concerns_before JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE scenario_runs ADD COLUMN IF NOT EXISTS concerns_after JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE scenario_runs ADD COLUMN IF NOT EXISTS changes JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE scenario_runs ADD COLUMN IF NOT EXISTS insights JSONB;
+ALTER TABLE scenario_runs ADD COLUMN IF NOT EXISTS variables JSONB;
+ALTER TABLE scenario_runs ADD COLUMN IF NOT EXISTS results JSONB;
+ALTER TABLE scenario_runs ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+ALTER TABLE scenario_runs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'scenario_runs' AND column_name = 'user_id') THEN
+    UPDATE scenario_runs SET auth0_sub = user_id WHERE auth0_sub IS NULL;
+  END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS scenario_runs_mission_id_idx ON scenario_runs(mission_id);
 CREATE INDEX IF NOT EXISTS scenario_runs_auth0_sub_idx ON scenario_runs(auth0_sub);
@@ -140,12 +204,12 @@ END $$;
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 5. Mission Documents Table (Storage Metadata)
+-- 5. Mission Documents Table
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS mission_documents (
   id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   mission_id     UUID        NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
-  auth0_sub      TEXT        NOT NULL,
+  auth0_sub      TEXT,
   filename       TEXT        NOT NULL,
   storage_path   TEXT        NOT NULL UNIQUE,
   file_type      TEXT        NOT NULL,
@@ -157,6 +221,20 @@ CREATE TABLE IF NOT EXISTS mission_documents (
   uploaded_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   processed_at   TIMESTAMPTZ
 );
+
+ALTER TABLE mission_documents ADD COLUMN IF NOT EXISTS auth0_sub TEXT;
+ALTER TABLE mission_documents ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'uploaded';
+ALTER TABLE mission_documents ADD COLUMN IF NOT EXISTS page_count INTEGER;
+ALTER TABLE mission_documents ADD COLUMN IF NOT EXISTS word_count INTEGER;
+ALTER TABLE mission_documents ADD COLUMN IF NOT EXISTS error_message TEXT;
+ALTER TABLE mission_documents ADD COLUMN IF NOT EXISTS uploaded_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+ALTER TABLE mission_documents ADD COLUMN IF NOT EXISTS processed_at TIMESTAMPTZ;
+
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'mission_documents' AND column_name = 'user_id') THEN
+    UPDATE mission_documents SET auth0_sub = user_id WHERE auth0_sub IS NULL;
+  END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS mission_documents_mission_id_idx ON mission_documents(mission_id);
 CREATE INDEX IF NOT EXISTS mission_documents_auth0_sub_idx ON mission_documents(auth0_sub);
@@ -179,13 +257,26 @@ CREATE TABLE IF NOT EXISTS document_chunks (
   id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   document_id  UUID        NOT NULL REFERENCES mission_documents(id) ON DELETE CASCADE,
   mission_id   UUID        NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
-  auth0_sub    TEXT        NOT NULL,
+  auth0_sub    TEXT,
   chunk_index  INTEGER     NOT NULL,
   page_number  INTEGER,
   text         TEXT        NOT NULL,
   word_count   INTEGER,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE document_chunks ADD COLUMN IF NOT EXISTS auth0_sub TEXT;
+ALTER TABLE document_chunks ADD COLUMN IF NOT EXISTS chunk_index INTEGER;
+ALTER TABLE document_chunks ADD COLUMN IF NOT EXISTS page_number INTEGER;
+ALTER TABLE document_chunks ADD COLUMN IF NOT EXISTS text TEXT;
+ALTER TABLE document_chunks ADD COLUMN IF NOT EXISTS word_count INTEGER;
+ALTER TABLE document_chunks ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'document_chunks' AND column_name = 'user_id') THEN
+    UPDATE document_chunks SET auth0_sub = user_id WHERE auth0_sub IS NULL;
+  END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS document_chunks_document_id_idx ON document_chunks(document_id);
 CREATE INDEX IF NOT EXISTS document_chunks_mission_id_idx ON document_chunks(mission_id);
@@ -203,13 +294,13 @@ END $$;
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 7. Document Facts Table (Telemetry & Parameter Extractions)
+-- 7. Document Facts Table
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS document_facts (
   id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   mission_id     UUID        NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
   document_id    UUID        REFERENCES mission_documents(id) ON DELETE SET NULL,
-  auth0_sub      TEXT        NOT NULL,
+  auth0_sub      TEXT,
   category       TEXT        NOT NULL,
   field_key      TEXT        NOT NULL,
   label          TEXT        NOT NULL,
@@ -223,6 +314,25 @@ CREATE TABLE IF NOT EXISTS document_facts (
   chunk_index    INTEGER,
   extracted_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE document_facts ADD COLUMN IF NOT EXISTS auth0_sub TEXT;
+ALTER TABLE document_facts ADD COLUMN IF NOT EXISTS category TEXT;
+ALTER TABLE document_facts ADD COLUMN IF NOT EXISTS field_key TEXT;
+ALTER TABLE document_facts ADD COLUMN IF NOT EXISTS label TEXT;
+ALTER TABLE document_facts ADD COLUMN IF NOT EXISTS value TEXT;
+ALTER TABLE document_facts ADD COLUMN IF NOT EXISTS numeric_value FLOAT;
+ALTER TABLE document_facts ADD COLUMN IF NOT EXISTS unit TEXT;
+ALTER TABLE document_facts ADD COLUMN IF NOT EXISTS state TEXT DEFAULT 'extracted';
+ALTER TABLE document_facts ADD COLUMN IF NOT EXISTS source_text TEXT;
+ALTER TABLE document_facts ADD COLUMN IF NOT EXISTS page_number INTEGER;
+ALTER TABLE document_facts ADD COLUMN IF NOT EXISTS chunk_index INTEGER;
+ALTER TABLE document_facts ADD COLUMN IF NOT EXISTS extracted_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'document_facts' AND column_name = 'user_id') THEN
+    UPDATE document_facts SET auth0_sub = user_id WHERE auth0_sub IS NULL;
+  END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS document_facts_mission_id_idx ON document_facts(mission_id);
 CREATE INDEX IF NOT EXISTS document_facts_document_id_idx ON document_facts(document_id);
