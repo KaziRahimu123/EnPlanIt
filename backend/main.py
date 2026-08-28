@@ -13,23 +13,37 @@ app = FastAPI(
     description="Backend for the EnPlanIt space mission intelligence and scenario simulation platform.",
 )
 
-# Production & local CORS configuration
-allowed_origins = [
+# ---------------------------------------------------------------------------
+# Strict CORS Configuration
+# ---------------------------------------------------------------------------
+
+_default_origins = [
+    "https://enplanit-web.vercel.app",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
-frontend_url = os.getenv("FRONTEND_URL")
-if frontend_url and frontend_url not in allowed_origins:
-    allowed_origins.append(frontend_url)
+
+# Explicitly approved preview or custom domains via environment variables
+_env_origins = []
+if os.getenv("FRONTEND_URL"):
+    _env_origins.append(os.getenv("FRONTEND_URL", "").strip())
 if os.getenv("ALLOWED_ORIGINS"):
-    allowed_origins.extend([o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()])
+    _env_origins.extend(
+        [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+    )
+
+# Filter and deduplicate (strictly prevent wildcards with credentials)
+allowed_origins: list[str] = list(
+    dict.fromkeys(
+        [o for o in _default_origins + _env_origins if o and o != "*"]
+    )
+)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_origin_regex=r"https://.*\.vercel\.app" if os.getenv("ENVIRONMENT") == "production" or os.getenv("ALLOW_VERCEL_PREVIEWS", "true").lower() == "true" else None,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -44,7 +58,6 @@ app.include_router(analysis.router,   prefix="/api/analysis",   tags=["analysis"
 app.include_router(insights.router,   prefix="/api/scenarios",  tags=["insights"])
 app.include_router(profile.router,    prefix="/api/profile",    tags=["profile"])
 app.include_router(documents.router,  prefix="/api/missions",   tags=["documents"])
-
 
 
 @app.get("/api/health", tags=["health"])
