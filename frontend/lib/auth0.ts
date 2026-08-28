@@ -10,9 +10,12 @@ const clientId = process.env.AUTH0_CLIENT_ID?.trim();
 const clientSecret = process.env.AUTH0_CLIENT_SECRET?.trim();
 const secret = process.env.AUTH0_SECRET?.trim();
 
-const allowedOrigins: string[] = [];
+const allowedOrigins: string[] = [
+  "https://enplanit-web.vercel.app",
+];
 if (process.env.APP_BASE_URL?.trim()) allowedOrigins.push(process.env.APP_BASE_URL.trim());
 if (process.env.AUTH0_BASE_URL?.trim()) allowedOrigins.push(process.env.AUTH0_BASE_URL.trim());
+if (process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim()) allowedOrigins.push(`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL.trim()}`);
 if (process.env.VERCEL_URL?.trim()) allowedOrigins.push(`https://${process.env.VERCEL_URL.trim()}`);
 allowedOrigins.push("http://localhost:3000", "http://127.0.0.1:3000");
 
@@ -32,16 +35,20 @@ const authParams: Record<string, string> = {
   scope: "openid profile email",
   prompt: "select_account",
 };
-const audience = (
+const rawAudience = (
   process.env.AUTH0_API_AUDIENCE?.trim() ||
-  process.env.AUTH0_AUDIENCE?.trim()
+  process.env.AUTH0_AUDIENCE?.trim() ||
+  ""
 );
 if (
-  audience &&
-  audience !== "https://api.enplanit.local" &&
-  !audience.includes("example")
+  rawAudience &&
+  !rawAudience.includes("localhost") &&
+  !rawAudience.includes(".local") &&
+  !rawAudience.includes("example") &&
+  !rawAudience.includes("astroops") &&
+  !rawAudience.includes("enplanit.local")
 ) {
-  authParams.audience = audience;
+  authParams.audience = rawAudience;
 }
 
 export const auth0 = new Auth0Client({
