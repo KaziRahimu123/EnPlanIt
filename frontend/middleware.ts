@@ -1,11 +1,13 @@
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { auth0 } from "./lib/auth0";
 
-export async function proxy(request: Request) {
-  const url = new URL(request.url);
+export async function middleware(request: NextRequest) {
+  const url = request.nextUrl;
 
   // If the user cancelled/rejected authorization (e.g. error=access_denied), redirect smoothly to homepage
   if (url.pathname.startsWith("/auth/callback") && url.searchParams.has("error")) {
-    return Response.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return await auth0.middleware(request);
