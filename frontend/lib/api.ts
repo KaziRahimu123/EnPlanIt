@@ -30,13 +30,20 @@ async function getClientAccessToken(): Promise<string | null> {
         getAccessToken(),
         new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500)),
       ]);
-      if (token) {
-        _cachedAccessToken = token;
+      if (
+        token &&
+        typeof token === "string" &&
+        token.trim() &&
+        token !== "undefined" &&
+        token !== "null"
+      ) {
+        _cachedAccessToken = token.trim();
         setTimeout(() => {
           _cachedAccessToken = null;
         }, 120000); // 2 minute cache
+        return _cachedAccessToken;
       }
-      return token;
+      return null;
     } catch (err) {
       console.warn("Auth0 getAccessToken warning:", err);
       return null;
@@ -57,7 +64,7 @@ async function authFetch(url: string, init: RequestInit = {}): Promise<Response>
     ...(init.headers as Record<string, string> | undefined),
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
-  return fetch(url, { ...init, headers });
+  return fetch(url, { ...init, headers, credentials: "same-origin" });
 }
 
 export function parseApiError(err: unknown, fallback: string): string {

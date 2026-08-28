@@ -94,97 +94,87 @@ def _fetch_userinfo(token: str) -> Optional[dict]:
 # ---------------------------------------------------------------------------
 
 def _verify_token(token: str) -> dict:
-    """Decode and validate an Auth0 token (JWS, JWE, or Opaque token via UserInfo)."""
-    if not AUTH0_DOMAIN:
-        raise JWTError("AUTH0_DOMAIN not configured on the backend")
+    """Decode and validate an Auth0 token (JWS, JWE, custom JWT, or Opaque token via UserInfo)."""
+    if not token or token.strip().lower() in ("null", "undefined", "none", ""):
+        raise JWTError("Missing or empty authentication token")
 
+    token = token.strip()
     payload: Optional[dict] = None
     parts = token.split(".")
 
-    # 1. If it's a standard 3-part JWS, try JWT cryptographic decode and claims extraction
+    # Strategy 1: Standard 3-part JWT (Auth0 ID token, Access token, or backend JWT)
     if len(parts) == 3:
+        # 1a. Try RS256 cryptographic decode via JWKS
         try:
             header = jwt.get_unverified_header(token)
             alg: str = header.get("alg", "RS256")
             kid: Optional[str] = header.get("kid")
 
             if alg.startswith("RS") or alg.startswith("ES") or alg.startswith("PS"):
+                jwks = _get_jwks()
+                rsa_key: Optional[dict] = None
+                for k in jwks.get("keys", []):
+                    if k.get("kid") == kid:
+                        rsa_key = k
+                        break
+                if rsa_key is None and jwks.get("keys"):
+                    rsa_key = jwks["keys"][0]
+                if rsa_key:
+                    payload = jwt.decode(
+                        token,
+                        rsa_key,
+                        algorithms=[alg, "RS256"],
+                        options={"verify_aud": False, "verify_iss": False},
+                    )
+        except ExpiredSignatureError:
+            raise JWTError("Token has expired")
+        except Exception as exc:
+            logger.info("RS256 JWKS verification failed: %s", exc)
+
+        # 1b. Try HS256 with configured client secrets
+        if payload is None:
+            for s in (AUTH0_CLIENT_SECRET, AUTH0_SECRET, os.getenv("JWT_SECRET_KEY", "")):
+                if not s:
+                    continue
                 try:
-                    jwks = _get_jwks()
-                    rsa_key: Optional[dict] = None
-                    for k in jwks.get("keys", []):
-                        if k.get("kid") == kid:
-                            rsa_key = k
-                            break
-
-                    if rsa_key is None and jwks.get("keys"):
-                        rsa_key = jwks["keys"][0]
-
-                    if rsa_key:
-                        payload = jwt.decode(
-                            token,
-                            rsa_key,
-                            algorithms=[alg, "RS256"],
-                            options={"verify_aud": False, "verify_iss": False},
-                        )
-                except ExpiredSignatureError:
-                    raise JWTError("Token has expired")
-                except Exception as exc:
-                    logger.info("RS256 signature verification deferred: %s", exc)
-            else:
-                secret: str = AUTH0_CLIENT_SECRET or AUTH0_SECRET or ""
-                if secret:
-                    try:
-                        payload = jwt.decode(
-                            token,
-                            secret,
-                            algorithms=[alg, "HS256"],
-                            options={"verify_aud": False, "verify_iss": False},
-                        )
-                    except ExpiredSignatureError:
-                        raise JWTError("Token has expired")
-                    except Exception:
-                        try:
-                            payload = jwt.decode(
-                                token,
-                                AUTH0_SECRET or secret,
-                                algorithms=[alg, "HS256"],
-                                options={"verify_aud": False, "verify_iss": False},
-                            )
-                        except ExpiredSignatureError:
-                            raise JWTError("Token has expired")
-                        except Exception as exc:
-                            logger.info("HS256 verification deferred: %s", exc)
-
-            if payload is None:
-                try:
-                    claims = jwt.get_unverified_claims(token)
-                    if isinstance(claims, str):
-                        import json
-                        claims = json.loads(claims)
-                    if isinstance(claims, dict):
-                        if claims.get("exp"):
-                            import time
-                            if time.time() > claims["exp"]:
-                                raise JWTError("Token has expired")
-                        if claims.get("sub"):
-                            payload = claims
+                    payload = jwt.decode(
+                        token,
+                        s,
+                        algorithms=["HS256"],
+                        options={"verify_aud": False, "verify_iss": False},
+                    )
+                    if payload and payload.get("sub"):
+                        break
                 except ExpiredSignatureError:
                     raise JWTError("Token has expired")
                 except Exception:
-                    pass
-        except ExpiredSignatureError:
-            raise JWTError("Token has expired")
-        except Exception:
-            pass
+                    continue
 
-    # 2. If token is not 3-part or JWT decoding failed, query Auth0 /userinfo
+        # 1c. Try unverified claims extraction with expiration check
+        if payload is None:
+            try:
+                claims = jwt.get_unverified_claims(token)
+                if isinstance(claims, str):
+                    import json
+                    claims = json.loads(claims)
+                if isinstance(claims, dict) and claims.get("sub"):
+                    if claims.get("exp"):
+                        import time
+                        if time.time() > claims["exp"]:
+                            raise JWTError("Token has expired")
+                    payload = claims
+            except JWTError:
+                raise
+            except Exception as exc:
+                logger.info("Unverified claims extraction failed: %s", exc)
+
+    # Strategy 2: Opaque token or JWE — query Auth0 /userinfo
     if payload is None:
         userinfo = _fetch_userinfo(token)
         if userinfo and "sub" in userinfo:
             payload = userinfo
 
-    # 3. If decoding completely fails, raise authentication error
+    # Strategy 3: Check if sub is resolved
     if payload is None or not payload.get("sub"):
         raise JWTError("Invalid or unrecognizable authentication token")
 
