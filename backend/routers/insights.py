@@ -10,6 +10,7 @@ Two endpoints:
   POST /api/scenarios/insights/save  — compute + persist to scenario_runs (auth required)
 """
 
+import logging
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from typing import Any, Optional
@@ -20,6 +21,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import ai_client
 from supabase_client import get_supabase
 from auth0 import get_current_user
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -51,16 +54,14 @@ class ScenarioInsightsResponse(BaseModel):
     insights: dict[str, Any] | None
     ai_available: bool
     error: str | None
+    saved: Optional[bool] = None
+    save_error: Optional[str] = None
 
 
-def _persist_insights(mission_id: str, auth0_sub: str, insights: Optional[dict]) -> None:
-    """Save AI insights onto the existing scenario_runs row for this mission.
-
-    Silently no-ops if the scenario run doesn't exist yet or ownership fails —
-    insights are supplementary and must never block the response.
-    """
+def _persist_insights(mission_id: str, auth0_sub: str, insights: Optional[dict]) -> tuple[bool, Optional[str]]:
+    """Save AI insights onto the existing scenario_runs row for this mission."""
     if not insights:
-        return
+        return False, "No insights provided to persist"
     try:
         sb = get_supabase()
         # Verify mission ownership before writing
@@ -73,11 +74,19 @@ def _persist_insights(mission_id: str, auth0_sub: str, insights: Optional[dict])
             .execute()
         )
         if not mission.data:
-            return
+            logger.warning(
+                "DB persist insights rejected: mission %s not found or access denied for user %s",
+                mission_id,
+                auth0_sub,
+            )
+            return False, "Mission not found or unauthorized"
         # Update the insights column on the scenario_runs row
         sb.table("scenario_runs").update({"insights": insights}).eq("mission_id", mission_id).execute()
-    except Exception:  # noqa: BLE001
-        pass
+        logger.info("Successfully persisted insights for mission %s", mission_id)
+        return True, None
+    except Exception as exc:
+        logger.error("Database error persisting insights for mission %s: %s", mission_id, exc, exc_info=True)
+        return False, f"Database persistence failed: {exc}"
 
 
 @router.post("/insights", response_model=ScenarioInsightsResponse)
@@ -118,11 +127,17 @@ async def scenario_insights_and_save(
         changes=[c.model_dump() for c in payload.changes],
         mission_context=payload.mission_context,
     )
+    saved: Optional[bool] = None
+    save_error: Optional[str] = None
+
     if payload.mission_id and result["insights"]:
-        _persist_insights(payload.mission_id, current_user["sub"], result["insights"])
+        saved, save_error = _persist_insights(payload.mission_id, current_user["sub"], result["insights"])
+
     return ScenarioInsightsResponse(
         mission_id=payload.mission_id,
         insights=result["insights"],
         ai_available=result["ai_available"],
         error=result["error"],
+        saved=saved,
+        save_error=save_error,
     )

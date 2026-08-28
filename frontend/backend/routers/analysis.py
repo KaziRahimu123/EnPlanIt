@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-"""Mission analysis router — OpenAI via the AI client module.
+"""Mission analysis router — OpenAI / IBM Granite via the AI client module.
 
 Extends the original analysis with optional persistence: when a mission_id
 is supplied and the user is authenticated, results are saved to Supabase.
 Document evidence from uploaded docs is incorporated when available.
 """
 
+import logging
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 from typing import Any, Optional
@@ -19,6 +20,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 import ai_client
 from supabase_client import get_supabase
 from auth0 import get_current_user
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -34,6 +37,8 @@ class MissionAnalysisResponse(BaseModel):
     plan: dict[str, Any] | None
     ai_available: bool
     error: str | None
+    saved: Optional[bool] = None
+    save_error: Optional[str] = None
 
 
 def _save_analysis(
@@ -41,12 +46,11 @@ def _save_analysis(
     auth0_sub: str,
     extracted: Optional[dict],
     plan: Optional[dict],
-) -> None:
-    """Persist analysis results to Supabase. Silently skips on ownership failure."""
+) -> tuple[bool, Optional[str]]:
+    """Persist analysis results to Supabase. Logs failures and returns persistence confirmation."""
     try:
         sb = get_supabase()
-        # Verify ownership — use .limit(1) not .maybe_single() so result is always
-        # an APIResponse with a .data list, never None (supabase-py 2.x behaviour).
+        # Verify ownership — .limit(1) guarantees an APIResponse with .data list
         mission = (
             sb.table("missions")
             .select("id")
@@ -55,8 +59,20 @@ def _save_analysis(
             .limit(1)
             .execute()
         )
-        if not mission.data or extracted is None or plan is None:
-            return
+        if not mission.data:
+            logger.warning(
+                "DB save analysis rejected: mission %s not found or access denied for user %s",
+                mission_id,
+                auth0_sub,
+            )
+            return False, "Mission not found or unauthorized"
+
+        if extracted is None or plan is None:
+            logger.warning(
+                "DB save analysis skipped: missing extracted or plan payload for mission %s",
+                mission_id,
+            )
+            return False, "Missing extraction or flight plan data"
 
         now = datetime.now(timezone.utc).isoformat()
 
@@ -71,7 +87,7 @@ def _save_analysis(
             "updated_at": now,
         }).eq("id", mission_id).execute()
 
-        # Upsert into mission_analyses
+        # Upsert into mission_analyses table
         existing = (
             sb.table("mission_analyses")
             .select("id")
@@ -81,6 +97,7 @@ def _save_analysis(
         )
         analysis_data = {
             "mission_id": mission_id,
+            "auth0_sub": auth0_sub,
             "mission_summary": plan.get("mission_summary"),
             "objectives": plan.get("objectives"),
             "required_resources": plan.get("required_resources"),
@@ -88,13 +105,14 @@ def _save_analysis(
             "planning_considerations": plan.get("planning_considerations"),
             "missing_information": plan.get("missing_information"),
             "analyzed_at": now,
+            "updated_at": now,
         }
         if existing.data:
             sb.table("mission_analyses").update(analysis_data).eq("mission_id", mission_id).execute()
         else:
             sb.table("mission_analyses").insert(analysis_data).execute()
 
-        # Also keep denormalized plan fields on the mission row for easy retrieval
+        # Also keep denormalized plan fields on the mission row for seamless retrieval
         sb.table("missions").update({
             "mission_summary": plan.get("mission_summary"),
             "objectives": plan.get("objectives"),
@@ -104,8 +122,12 @@ def _save_analysis(
             "missing_information": plan.get("missing_information"),
         }).eq("id", mission_id).execute()
 
-    except Exception:  # noqa: BLE001
-        pass
+        logger.info("Successfully persisted mission analysis for mission %s", mission_id)
+        return True, None
+
+    except Exception as exc:
+        logger.error("Database error saving analysis for mission %s: %s", mission_id, exc, exc_info=True)
+        return False, f"Database persistence failed: {exc}"
 
 
 def _get_document_evidence(mission_id: str, auth0_sub: str) -> str:
@@ -186,7 +208,7 @@ async def analyze_mission_and_save(
     current_user: dict = Depends(get_current_user),
 ) -> MissionAnalysisResponse:
     """
-    Run analysis AND persist results to Supabase.  Requires authentication.
+    Run analysis AND persist results to Supabase. Requires authentication.
     Incorporates document evidence when available.
     """
     # Augment description with document evidence if mission has uploaded docs
@@ -201,25 +223,31 @@ async def analyze_mission_and_save(
             )
 
     result = ai_client.analyze_mission(description)
+    saved: Optional[bool] = None
+    save_error: Optional[str] = None
+
     if payload.mission_id and result["ai_available"]:
-        _save_analysis(
+        saved, save_error = _save_analysis(
             payload.mission_id,
             current_user["sub"],
             result["extracted"],
             result["plan"],
         )
+
     return MissionAnalysisResponse(
         mission_id=payload.mission_id,
         extracted=result["extracted"],
         plan=result["plan"],
         ai_available=result["ai_available"],
         error=result["error"],
+        saved=saved,
+        save_error=save_error,
     )
 
 
 @router.get("/status")
 async def ai_status() -> dict:
-    """Report whether OpenAI credentials are configured and which model is active."""
+    """Report whether AI credentials are configured and which model is active."""
     return {
         "ai_available": ai_client.credentials_configured(),
         "model": ai_client.active_model(),

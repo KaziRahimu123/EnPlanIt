@@ -283,6 +283,7 @@ function AnalysisContent() {
   const [error, setError] = useState<string | null>(null);
   const [fetchingMission, setFetchingMission] = useState(false);
   const [savedBanner, setSavedBanner] = useState(false);
+  const [saveWarning, setSaveWarning] = useState<string | null>(null);
   const [documents, setDocuments] = useState<MissionDocument[]>([]);
   const [facts, setFacts] = useState<DocumentFact[]>([]);
   const [descExpanded, setDescExpanded] = useState(false);
@@ -360,11 +361,18 @@ function AnalysisContent() {
     setError(null);
     setResult(null);
     setSavedBanner(false);
+    setSaveWarning(null);
     try {
       // save=true when a missionId is present — persists results to DB
       const res = await analyzeMission(missionId, description || "", true);
       setResult(res);
-      if (missionId && res.ai_available) setSavedBanner(true);
+      if (res.saved === true) {
+        setSavedBanner(true);
+        setSaveWarning(null);
+      } else if (res.saved === false) {
+        setSavedBanner(false);
+        setSaveWarning(res.save_error || "Analysis generated, but failed to save to database. Please retry.");
+      }
       await refreshFacts();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Analysis failed.");
@@ -657,7 +665,23 @@ function AnalysisContent() {
       {savedBanner && (
         <div className="rounded-xl border border-[var(--green)]/30 bg-[var(--green)]/5 px-4 py-2.5 flex items-center gap-2 text-xs font-mono text-[var(--green)]">
           <span>✓</span>
-          <span>Analysis results saved to your mission.</span>
+          <span>Analysis results confirmed and saved to your mission database.</span>
+        </div>
+      )}
+
+      {/* ── Save Warning / Retry banner ── */}
+      {saveWarning && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 flex items-center justify-between gap-3 text-xs font-mono text-amber-300">
+          <div className="flex items-center gap-2">
+            <span>⚠️</span>
+            <span>{saveWarning}</span>
+          </div>
+          <button
+            onClick={handleAnalyze}
+            className="px-3 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-bold text-[11px] uppercase tracking-wider transition-colors shrink-0"
+          >
+            Retry Save ↻
+          </button>
         </div>
       )}
 

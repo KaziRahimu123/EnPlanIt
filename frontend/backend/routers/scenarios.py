@@ -18,6 +18,7 @@ from typing import Optional, Any
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
+import logging
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
@@ -25,6 +26,8 @@ from supabase_client import get_supabase
 from auth0 import get_current_user
 import doc_facts
 import ai_client
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -109,6 +112,8 @@ class ScenarioRunResponse(BaseModel):
     readiness: ReadinessDelta | None = None
     mitigations: list[SubsystemMitigation] = Field(default_factory=list)
     environment: EnvironmentalTelemetry | None = None
+    saved: Optional[bool] = None
+    save_error: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -360,12 +365,11 @@ def _save_scenario(
     concerns_before: dict,
     concerns_after: dict,
     changes: list,
-) -> None:
-    """Upsert scenario results for a mission. Silently skips on ownership mismatch."""
+) -> tuple[bool, Optional[str]]:
+    """Upsert scenario results for a mission. Logs failures and returns persistence status."""
     try:
         sb = get_supabase()
-        # Verify ownership — .limit(1).execute() always returns APIResponse(.data=[...]),
-        # unlike .maybe_single().execute() which returns None on zero rows (supabase-py 2.x).
+        # Verify ownership — .limit(1).execute() always returns APIResponse(.data=[...])
         mission = (
             sb.table("missions")
             .select("id")
@@ -375,7 +379,12 @@ def _save_scenario(
             .execute()
         )
         if not mission.data:
-            return
+            logger.warning(
+                "DB save scenario rejected: mission %s not found or access denied for user %s",
+                mission_id,
+                auth0_sub,
+            )
+            return False, "Mission not found or unauthorized"
 
         now = datetime.now(timezone.utc).isoformat()
         data = {
@@ -403,18 +412,21 @@ def _save_scenario(
 
         # bump mission updated_at
         sb.table("missions").update({"updated_at": now}).eq("id", mission_id).execute()
-    except Exception:  # noqa: BLE001
-        pass
+        logger.info("Successfully persisted scenario run for mission %s", mission_id)
+        return True, None
+    except Exception as exc:
+        logger.error("DB save scenario failed for mission %s: %s", mission_id, exc, exc_info=True)
+        return False, f"Database persistence failed: {exc}"
 
 
 def _save_scenario_insights(
     mission_id: str,
     auth0_sub: str,
     insights: Optional[dict],
-) -> None:
+) -> tuple[bool, Optional[str]]:
     """Persist AI insights onto the existing scenario result row."""
     if not insights:
-        return
+        return False, "No insights data provided"
     try:
         sb = get_supabase()
         mission = (
@@ -426,10 +438,18 @@ def _save_scenario_insights(
             .execute()
         )
         if not mission.data:
-            return
+            logger.warning(
+                "DB save scenario insights rejected: mission %s not found or access denied for user %s",
+                mission_id,
+                auth0_sub,
+            )
+            return False, "Mission not found or unauthorized"
         sb.table("scenario_runs").update({"insights": insights}).eq("mission_id", mission_id).execute()
-    except Exception:  # noqa: BLE001
-        pass
+        logger.info("Successfully persisted scenario insights for mission %s", mission_id)
+        return True, None
+    except Exception as exc:
+        logger.error("DB save scenario insights failed for mission %s: %s", mission_id, exc, exc_info=True)
+        return False, f"Database persistence failed: {exc}"
 
 
 def _build_full_scenario_response(mission_id: str | None, before: ScenarioVariables, after: ScenarioVariables) -> ScenarioRunResponse:
@@ -652,9 +672,11 @@ async def run_scenario_and_save(
     Run scenario AND persist results to Supabase. Requires authentication.
     """
     resp = _build_full_scenario_response(payload.mission_id, payload.before, payload.after)
+    saved: Optional[bool] = None
+    save_error: Optional[str] = None
 
     if payload.mission_id:
-        _save_scenario(
+        saved, save_error = _save_scenario(
             payload.mission_id,
             current_user["sub"],
             payload.before,
@@ -664,6 +686,8 @@ async def run_scenario_and_save(
             resp.changes,
         )
 
+    resp.saved = saved
+    resp.save_error = save_error
     return resp
 
 
@@ -680,6 +704,8 @@ class ScenarioInsightsResponse(BaseModel):
     insights: Optional[dict[str, Any]] = None
     ai_available: bool = True
     error: Optional[str] = None
+    saved: Optional[bool] = None
+    save_error: Optional[str] = None
 
 
 @router.post("/insights", response_model=ScenarioInsightsResponse)
@@ -715,14 +741,23 @@ async def get_insights_and_save(
         changes=payload.changes,
         mission_context=payload.mission_context,
     )
+    saved: Optional[bool] = None
+    save_error: Optional[str] = None
+
     if payload.mission_id and res.get("insights"):
-        _save_scenario_insights(payload.mission_id, current_user["sub"], res["insights"])
+        saved, save_error = _save_scenario_insights(
+            payload.mission_id,
+            current_user["sub"],
+            res["insights"],
+        )
 
     return ScenarioInsightsResponse(
         mission_id=payload.mission_id,
         insights=res.get("insights"),
         ai_available=res.get("ai_available", True),
         error=res.get("error"),
+        saved=saved,
+        save_error=save_error,
     )
 
 

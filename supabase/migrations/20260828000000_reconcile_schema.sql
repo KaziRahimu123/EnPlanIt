@@ -1,10 +1,14 @@
 -- =============================================================================
--- EnPlanIt — Complete Supabase Database Schema (Reconciled)
--- Built for AI Builders Challenge (Space Exploration)
+-- Migration: 20260828000000_reconcile_schema.sql
+-- Description: Reconcile Supabase database schema for EnPlanIt Scenario Lab
+--   1. Create mission_analyses table with full foreign key references
+--   2. Add/reconcile scenario_runs columns (before_vars, after_vars, concerns_before, concerns_after, changes, updated_at)
+--   3. Add indexes on mission_id, auth0_sub, and timestamps across all tables
+--   4. Enforce Row-Level Security (RLS) with strict auth0_sub ownership policies
 -- =============================================================================
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 1. Profiles Table
+-- 1. Profiles Table (Ensure schema & RLS)
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS profiles (
   id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -35,7 +39,7 @@ END $$;
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 2. Missions Table
+-- 2. Missions Table (Ensure schema, indexes & RLS)
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS missions (
   id                      UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -74,7 +78,7 @@ END $$;
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 3. Mission Analyses Table
+-- 3. Mission Analyses Table (New Table Reconciliation)
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS mission_analyses (
   id                      UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -106,7 +110,7 @@ END $$;
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 4. Scenario Runs Table
+-- 4. Scenario Runs Table (Reconcile Columns, Indexes & RLS)
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS scenario_runs (
   id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -124,6 +128,15 @@ CREATE TABLE IF NOT EXISTS scenario_runs (
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Reconcile any missing columns in existing deployments
+ALTER TABLE scenario_runs ADD COLUMN IF NOT EXISTS before_vars JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE scenario_runs ADD COLUMN IF NOT EXISTS after_vars JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE scenario_runs ADD COLUMN IF NOT EXISTS concerns_before JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE scenario_runs ADD COLUMN IF NOT EXISTS concerns_after JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE scenario_runs ADD COLUMN IF NOT EXISTS changes JSONB NOT NULL DEFAULT '[]'::jsonb;
+ALTER TABLE scenario_runs ADD COLUMN IF NOT EXISTS insights JSONB;
+ALTER TABLE scenario_runs ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
 CREATE INDEX IF NOT EXISTS scenario_runs_mission_id_idx ON scenario_runs(mission_id);
 CREATE INDEX IF NOT EXISTS scenario_runs_auth0_sub_idx ON scenario_runs(auth0_sub);
 CREATE INDEX IF NOT EXISTS scenario_runs_updated_at_idx ON scenario_runs(updated_at DESC);
@@ -140,7 +153,7 @@ END $$;
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 5. Mission Documents Table (Storage Metadata)
+-- 5. Mission Documents Table (Metadata & Storage Tracking)
 -- ─────────────────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS mission_documents (
   id             UUID        PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -293,6 +293,8 @@ export interface ScenarioRunResponse {
   readiness?: ReadinessDelta;
   mitigations?: SubsystemMitigation[];
   environment?: EnvironmentalTelemetry;
+  saved?: boolean | null;
+  save_error?: string | null;
 }
 
 export async function runScenario(
@@ -359,6 +361,8 @@ export interface MissionAnalysisResponse {
   plan: MissionPlan | null;
   ai_available: boolean;
   error: string | null;
+  saved?: boolean | null;
+  save_error?: string | null;
 }
 
 export async function analyzeMission(
@@ -395,6 +399,8 @@ export interface ScenarioInsightsResponse {
   insights: ScenarioInsights | null;
   ai_available: boolean;
   error: string | null;
+  saved?: boolean | null;
+  save_error?: string | null;
 }
 
 export async function getScenarioInsights(

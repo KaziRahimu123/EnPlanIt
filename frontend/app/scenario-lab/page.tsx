@@ -430,6 +430,7 @@ function ScenarioContent() {
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedBanner, setSavedBanner] = useState(false);
+  const [saveWarning, setSaveWarning] = useState<string | null>(null);
   const [missionContext, setMissionContext] = useState<string | null>(null);
   const [briefingExpanded, setBriefingExpanded] = useState(false);
   const [showDossierModal, setShowDossierModal] = useState(false);
@@ -639,6 +640,7 @@ function ScenarioContent() {
     setInsightsRes(null);
     setError(null);
     setSavedBanner(false);
+    setSaveWarning(null);
   }
 
   function handleChange(key: keyof ScenarioVariables, raw: string) {
@@ -656,6 +658,7 @@ function ScenarioContent() {
     setInsightsRes(null);
     setError(null);
     setSavedBanner(false);
+    setSaveWarning(null);
   }
 
   function applyPreset(preset: Partial<ScenarioVariables>) {
@@ -699,12 +702,19 @@ function ScenarioContent() {
     setError(null);
     setInsightsRes(null);
     setSavedBanner(false);
+    setSaveWarning(null);
     try {
       const safeAfter = buildEffectiveAfterVars();
       const effectiveBefore = buildBeforeVars();
       const res = await runScenario(activeMissionId, effectiveBefore, safeAfter, !!activeMissionId);
       setResult(res);
-      if (activeMissionId) setSavedBanner(true);
+      if (res.saved === true) {
+        setSavedBanner(true);
+        setSaveWarning(null);
+      } else if (res.saved === false) {
+        setSavedBanner(false);
+        setSaveWarning(res.save_error || "Scenario simulated, but failed to persist to database. Please retry.");
+      }
 
       setInsightsLoading(true);
       getScenarioInsights(
@@ -981,7 +991,23 @@ function ScenarioContent() {
       {savedBanner && activeMissionId && (
         <div className="mb-5 rounded-xl border border-[var(--green)]/30 bg-[var(--green)]/5 px-5 py-3 flex items-center gap-2 text-sm text-[var(--green)]">
           <span>✓</span>
-          <span>Scenario saved to your mission.</span>
+          <span>Scenario confirmed and saved to your mission database.</span>
+        </div>
+      )}
+
+      {/* ── Save Warning / Retry banner ── */}
+      {saveWarning && activeMissionId && (
+        <div className="mb-5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-5 py-3 flex items-center justify-between gap-3 text-sm text-amber-300">
+          <div className="flex items-center gap-2">
+            <span>⚠️</span>
+            <span>{saveWarning}</span>
+          </div>
+          <button
+            onClick={handleRun}
+            className="px-3 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-bold text-xs uppercase tracking-wider transition-colors shrink-0"
+          >
+            Retry Save ↻
+          </button>
         </div>
       )}
 
