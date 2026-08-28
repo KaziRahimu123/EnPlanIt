@@ -574,12 +574,13 @@ def _save_scenario(
     try:
         sb = get_supabase()
         sub = (auth0_sub or "").strip()
-        clean = sub.split("|")[-1] if "|" in sub else sub
+        if not sub:
+            return False, "Authentication required"
         mission = (
             sb.table("missions")
             .select("id")
             .eq("id", mission_id)
-            .or_(f"auth0_sub.eq.{sub},auth0_sub.eq.{clean}")
+            .eq("auth0_sub", sub)
             .limit(1)
             .execute()
         )
@@ -635,12 +636,13 @@ def _save_scenario_insights(
     try:
         sb = get_supabase()
         sub = (auth0_sub or "").strip()
-        clean = sub.split("|")[-1] if "|" in sub else sub
+        if not sub:
+            return False, "Authentication required"
         mission = (
             sb.table("missions")
             .select("id")
             .eq("id", mission_id)
-            .or_(f"auth0_sub.eq.{sub},auth0_sub.eq.{clean}")
+            .eq("auth0_sub", sub)
             .limit(1)
             .execute()
         )
@@ -1002,12 +1004,13 @@ async def get_saved_scenario(
     """Return saved scenario data for a mission. Enforces ownership."""
     sb = get_supabase()
     sub = (current_user.get("sub") or "").strip()
-    clean = sub.split("|")[-1] if "|" in sub else sub
+    if not sub:
+        raise HTTPException(status_code=401, detail="Authentication required")
     mission = (
         sb.table("missions")
         .select("id")
         .eq("id", mission_id)
-        .or_(f"auth0_sub.eq.{sub},auth0_sub.eq.{clean}")
+        .eq("auth0_sub", sub)
         .limit(1)
         .execute()
     )
@@ -1095,13 +1098,14 @@ async def get_before_values(
     """
     sb = get_supabase()
     sub = (current_user.get("sub") or "").strip()
-    clean = sub.split("|")[-1] if "|" in sub else sub
+    if not sub:
+        raise HTTPException(status_code=401, detail="Authentication required")
     # Ownership check & load all mission extraction fields
     mission_res = (
         sb.table("missions")
         .select("id, duration, destination, power_source, known_resources, description, mission_type")
         .eq("id", mission_id)
-        .or_(f"auth0_sub.eq.{sub},auth0_sub.eq.{clean}")
+        .eq("auth0_sub", sub)
         .limit(1)
         .execute()
     )

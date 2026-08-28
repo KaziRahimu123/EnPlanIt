@@ -5,7 +5,7 @@
 --   2. Backfill auth0_sub from legacy user_id column if present
 --   3. Create mission_analyses table with full foreign key references
 --   4. Add indexes on mission_id, auth0_sub, and timestamps across all tables
---   5. Enforce Row-Level Security (RLS) with strict auth0_sub ownership policies
+--   5. Enforce Row-Level Security (RLS) with strict auth0_sub tenant isolation (no anonymous access)
 -- =============================================================================
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -40,16 +40,13 @@ CREATE INDEX IF NOT EXISTS profiles_created_at_idx ON profiles(created_at DESC);
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'profiles' AND policyname = 'Users can view own profile') THEN
-    CREATE POLICY "Users can view own profile" ON profiles
-      FOR SELECT USING (auth0_sub = (auth.jwt() ->> 'sub') OR auth.jwt() ->> 'sub' IS NULL);
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'profiles' AND policyname = 'Users can manage own profile') THEN
-    CREATE POLICY "Users can manage own profile" ON profiles
-      FOR ALL USING (auth0_sub = (auth.jwt() ->> 'sub') OR auth.jwt() ->> 'sub' IS NULL);
-  END IF;
-END $$;
+DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can manage own profile" ON profiles;
+CREATE POLICY "Users can manage own profile" ON profiles
+  FOR ALL
+  TO authenticated
+  USING (auth0_sub IS NOT NULL AND auth0_sub = (auth.jwt() ->> 'sub'))
+  WITH CHECK (auth0_sub IS NOT NULL AND auth0_sub = (auth.jwt() ->> 'sub'));
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -105,12 +102,12 @@ CREATE INDEX IF NOT EXISTS missions_updated_at_idx ON missions(updated_at DESC);
 
 ALTER TABLE missions ENABLE ROW LEVEL SECURITY;
 
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'missions' AND policyname = 'Users can manage own missions') THEN
-    CREATE POLICY "Users can manage own missions" ON missions
-      FOR ALL USING (auth0_sub = (auth.jwt() ->> 'sub') OR auth.jwt() ->> 'sub' IS NULL);
-  END IF;
-END $$;
+DROP POLICY IF EXISTS "Users can manage own missions" ON missions;
+CREATE POLICY "Users can manage own missions" ON missions
+  FOR ALL
+  TO authenticated
+  USING (auth0_sub IS NOT NULL AND auth0_sub = (auth.jwt() ->> 'sub'))
+  WITH CHECK (auth0_sub IS NOT NULL AND auth0_sub = (auth.jwt() ->> 'sub'));
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -148,12 +145,12 @@ CREATE INDEX IF NOT EXISTS mission_analyses_analyzed_at_idx ON mission_analyses(
 
 ALTER TABLE mission_analyses ENABLE ROW LEVEL SECURITY;
 
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'mission_analyses' AND policyname = 'Users can manage own analyses') THEN
-    CREATE POLICY "Users can manage own analyses" ON mission_analyses
-      FOR ALL USING (auth0_sub = (auth.jwt() ->> 'sub') OR auth.jwt() ->> 'sub' IS NULL);
-  END IF;
-END $$;
+DROP POLICY IF EXISTS "Users can manage own analyses" ON mission_analyses;
+CREATE POLICY "Users can manage own analyses" ON mission_analyses
+  FOR ALL
+  TO authenticated
+  USING (auth0_sub IS NOT NULL AND auth0_sub = (auth.jwt() ->> 'sub'))
+  WITH CHECK (auth0_sub IS NOT NULL AND auth0_sub = (auth.jwt() ->> 'sub'));
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -200,12 +197,12 @@ CREATE INDEX IF NOT EXISTS scenario_runs_created_at_idx ON scenario_runs(created
 
 ALTER TABLE scenario_runs ENABLE ROW LEVEL SECURITY;
 
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'scenario_runs' AND policyname = 'Users can manage own scenario runs') THEN
-    CREATE POLICY "Users can manage own scenario runs" ON scenario_runs
-      FOR ALL USING (auth0_sub = (auth.jwt() ->> 'sub') OR auth.jwt() ->> 'sub' IS NULL);
-  END IF;
-END $$;
+DROP POLICY IF EXISTS "Users can manage own scenario runs" ON scenario_runs;
+CREATE POLICY "Users can manage own scenario runs" ON scenario_runs
+  FOR ALL
+  TO authenticated
+  USING (auth0_sub IS NOT NULL AND auth0_sub = (auth.jwt() ->> 'sub'))
+  WITH CHECK (auth0_sub IS NOT NULL AND auth0_sub = (auth.jwt() ->> 'sub'));
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -247,12 +244,12 @@ CREATE INDEX IF NOT EXISTS mission_documents_uploaded_at_idx ON mission_document
 
 ALTER TABLE mission_documents ENABLE ROW LEVEL SECURITY;
 
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'mission_documents' AND policyname = 'Users can manage own documents') THEN
-    CREATE POLICY "Users can manage own documents" ON mission_documents
-      FOR ALL USING (auth0_sub = (auth.jwt() ->> 'sub') OR auth.jwt() ->> 'sub' IS NULL);
-  END IF;
-END $$;
+DROP POLICY IF EXISTS "Users can manage own documents" ON mission_documents;
+CREATE POLICY "Users can manage own documents" ON mission_documents
+  FOR ALL
+  TO authenticated
+  USING (auth0_sub IS NOT NULL AND auth0_sub = (auth.jwt() ->> 'sub'))
+  WITH CHECK (auth0_sub IS NOT NULL AND auth0_sub = (auth.jwt() ->> 'sub'));
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -290,12 +287,12 @@ CREATE INDEX IF NOT EXISTS document_chunks_created_at_idx ON document_chunks(cre
 
 ALTER TABLE document_chunks ENABLE ROW LEVEL SECURITY;
 
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'document_chunks' AND policyname = 'Users can manage own chunks') THEN
-    CREATE POLICY "Users can manage own chunks" ON document_chunks
-      FOR ALL USING (auth0_sub = (auth.jwt() ->> 'sub') OR auth.jwt() ->> 'sub' IS NULL);
-  END IF;
-END $$;
+DROP POLICY IF EXISTS "Users can manage own chunks" ON document_chunks;
+CREATE POLICY "Users can manage own chunks" ON document_chunks
+  FOR ALL
+  TO authenticated
+  USING (auth0_sub IS NOT NULL AND auth0_sub = (auth.jwt() ->> 'sub'))
+  WITH CHECK (auth0_sub IS NOT NULL AND auth0_sub = (auth.jwt() ->> 'sub'));
 
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -346,9 +343,17 @@ CREATE INDEX IF NOT EXISTS document_facts_extracted_at_idx ON document_facts(ext
 
 ALTER TABLE document_facts ENABLE ROW LEVEL SECURITY;
 
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'document_facts' AND policyname = 'Users can manage own facts') THEN
-    CREATE POLICY "Users can manage own facts" ON document_facts
-      FOR ALL USING (auth0_sub = (auth.jwt() ->> 'sub') OR auth.jwt() ->> 'sub' IS NULL);
-  END IF;
-END $$;
+DROP POLICY IF EXISTS "Users can manage own facts" ON document_facts;
+CREATE POLICY "Users can manage own facts" ON document_facts
+  FOR ALL
+  TO authenticated
+  USING (auth0_sub IS NOT NULL AND auth0_sub = (auth.jwt() ->> 'sub'))
+  WITH CHECK (auth0_sub IS NOT NULL AND auth0_sub = (auth.jwt() ->> 'sub'));
+
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 8. Block Anonymous / Unauthenticated Direct Table Access
+-- ─────────────────────────────────────────────────────────────────────────────
+REVOKE ALL ON ALL TABLES IN SCHEMA public FROM anon;
+REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM anon;
+REVOKE ALL ON ALL ROUTINES IN SCHEMA public FROM anon;

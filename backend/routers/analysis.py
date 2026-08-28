@@ -49,14 +49,14 @@ def _save_analysis(
 ) -> tuple[bool, Optional[str]]:
     """Persist analysis results to Supabase. Logs failures and returns persistence confirmation."""
     try:
-        sb = get_supabase()
         sub = (auth0_sub or "").strip()
-        clean = sub.split("|")[-1] if "|" in sub else sub
+        if not sub:
+            return False, "Authentication required"
         mission = (
             sb.table("missions")
             .select("id")
             .eq("id", mission_id)
-            .or_(f"auth0_sub.eq.{sub},auth0_sub.eq.{clean}")
+            .eq("auth0_sub", sub)
             .limit(1)
             .execute()
         )

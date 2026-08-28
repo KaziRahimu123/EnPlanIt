@@ -149,7 +149,10 @@ def _content_type(ext: str) -> str:
 
 
 def _verify_mission_ownership(mission_id: str, auth0_sub: str) -> None:
-    """Raise 404/403 if the mission doesn't exist or isn't owned by this user."""
+    """Raise 404/403/401 if the mission doesn't exist or isn't owned by this user."""
+    if not auth0_sub or not auth0_sub.strip():
+        raise HTTPException(status_code=401, detail="Authentication required")
+
     sb = get_supabase()
     result = (
         sb.table("missions")
@@ -161,12 +164,8 @@ def _verify_mission_ownership(mission_id: str, auth0_sub: str) -> None:
     if not result.data:
         raise HTTPException(status_code=404, detail="Mission not found")
     
-    sub = (auth0_sub or "").strip()
-    clean = sub.split("|")[-1] if "|" in sub else sub
     row_sub = (result.data[0].get("auth0_sub") or "").strip()
-    clean_row = row_sub.split("|")[-1] if "|" in row_sub else row_sub
-
-    if row_sub and sub and row_sub != sub and clean_row != clean and clean_row != sub and row_sub != clean:
+    if not row_sub or row_sub != auth0_sub.strip():
         raise HTTPException(status_code=403, detail="Access denied")
 
 
