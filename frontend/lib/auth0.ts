@@ -19,6 +19,7 @@ const appBaseUrl = (
 
 const authParams: Record<string, string> = {
   scope: "openid profile email",
+  prompt: "select_account",
 };
 const audience = (
   process.env.AUTH0_API_AUDIENCE?.trim() ||
