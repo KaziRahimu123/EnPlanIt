@@ -58,19 +58,20 @@ export default function SignupPage() {
         </div>
 
         {/* Auth0 signup button */}
-        <a
-          href="/auth/login?screen_hint=signup"
+        <button
+          type="button"
           onClick={() => {
-            window.location.href = "/auth/login?screen_hint=signup";
+            window.location.assign("/auth/login?screen_hint=signup");
           }}
           className="flex items-center justify-center gap-2.5 w-full py-2.5 rounded-lg font-semibold text-white text-sm transition-all mb-3 cursor-pointer"
           style={{
             background: "linear-gradient(135deg, var(--accent-dim), var(--accent))",
             boxShadow: "0 0 16px rgba(59,130,246,0.3)",
+            border: "none",
           }}
         >
           Create Account
-        </a>
+        </button>
 
         {/* Divider */}
         <div className="flex items-center gap-3 my-4">
@@ -82,15 +83,15 @@ export default function SignupPage() {
         {/* Footer */}
         <p className="text-center text-xs text-[var(--text-muted)]">
           Already have an account?{" "}
-          <a
-            href="/auth/login"
+          <button
+            type="button"
             onClick={() => {
-              window.location.href = "/auth/login";
+              window.location.assign("/auth/login");
             }}
-            className="text-[var(--accent-glow)] hover:underline font-medium cursor-pointer"
+            className="text-[var(--accent-glow)] hover:underline font-medium cursor-pointer bg-transparent border-none p-0 text-xs"
           >
             Sign in
-          </a>
+          </button>
         </p>
 
         <p className="mt-3 text-center text-[10px] text-[var(--text-muted)]">

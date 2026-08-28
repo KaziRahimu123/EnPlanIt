@@ -210,19 +210,22 @@ export default function NavBar() {
 
             {/* LOGGED OUT — Sign In button */}
             {!isLoading && !user && (
-              <a
-                href="/auth/login?returnTo=/dashboard"
-                onClick={() => {
-                  window.location.href = "/auth/login?returnTo=/dashboard";
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  window.location.assign("/auth/login?returnTo=/dashboard");
                 }}
                 className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold text-white transition-all cursor-pointer"
                 style={{
                   background: "linear-gradient(135deg, var(--accent-dim), var(--accent))",
                   boxShadow: "0 0 10px rgba(59,130,246,0.25)",
+                  border: "none",
                 }}
               >
                 Sign In
-              </a>
+              </button>
             )}
 
           </div>
