@@ -14,7 +14,7 @@ const appBaseUrl = (
   process.env.APP_BASE_URL?.trim() ||
   process.env.AUTH0_BASE_URL?.trim() ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL.trim()}` : undefined) ||
-  "http://localhost:3000"
+  (process.env.NODE_ENV === "production" ? undefined : "http://localhost:3000")
 );
 
 const authParams: Record<string, string> = {
@@ -34,7 +34,7 @@ export const auth0 = new Auth0Client({
   clientId,
   clientSecret,
   secret,
-  appBaseUrl,
+  ...(appBaseUrl ? { appBaseUrl } : {}),
   signInReturnToPath: "/dashboard",
   authorizationParameters: authParams,
 });
