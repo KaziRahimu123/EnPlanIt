@@ -60,7 +60,10 @@ export default function SignupPage() {
         {/* Auth0 signup button */}
         <a
           href="/auth/login?screen_hint=signup"
-          className="flex items-center justify-center gap-2.5 w-full py-2.5 rounded-lg font-semibold text-white text-sm transition-all mb-3"
+          onClick={() => {
+            window.location.href = "/auth/login?screen_hint=signup";
+          }}
+          className="flex items-center justify-center gap-2.5 w-full py-2.5 rounded-lg font-semibold text-white text-sm transition-all mb-3 cursor-pointer"
           style={{
             background: "linear-gradient(135deg, var(--accent-dim), var(--accent))",
             boxShadow: "0 0 16px rgba(59,130,246,0.3)",
@@ -81,7 +84,10 @@ export default function SignupPage() {
           Already have an account?{" "}
           <a
             href="/auth/login"
-            className="text-[var(--accent-glow)] hover:underline font-medium"
+            onClick={() => {
+              window.location.href = "/auth/login";
+            }}
+            className="text-[var(--accent-glow)] hover:underline font-medium cursor-pointer"
           >
             Sign in
           </a>

@@ -212,7 +212,10 @@ export default function NavBar() {
             {!isLoading && !user && (
               <a
                 href="/auth/login?returnTo=/dashboard"
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold text-white transition-all"
+                onClick={() => {
+                  window.location.href = "/auth/login?returnTo=/dashboard";
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold text-white transition-all cursor-pointer"
                 style={{
                   background: "linear-gradient(135deg, var(--accent-dim), var(--accent))",
                   boxShadow: "0 0 10px rgba(59,130,246,0.25)",

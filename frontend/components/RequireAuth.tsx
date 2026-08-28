@@ -33,7 +33,7 @@ export default function RequireAuth({
 
     // Not logged in → Auth0 login, preserving intended destination
     if (!user) {
-      router.replace(`/auth/login?returnTo=${encodeURIComponent(pathname)}`);
+      window.location.href = `/auth/login?returnTo=${encodeURIComponent(pathname)}`;
       return;
     }
 
