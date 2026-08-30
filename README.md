@@ -6,7 +6,7 @@
 
 EnPlanIt is a unified aerospace mission intelligence and scenario simulation platform for mission architects, systems engineers, mission risk and safety analysts, flight operations teams, and space exploration enthusiasts. It transforms mission concepts and uploaded flight dossiers into structured mission profiles, interactive subsystem maps, milestone roadmaps, and deterministic what-if simulations.
 
-> **Built for the IBM AI Builders Challenge (August 2026, Mission Beyond Earth: Space Exploration).**
+> **Built for the IBM AI Builders Challenge (August 2026, Advance Space Exploration with AI).**
 
 [Try the live demo](https://enplanit-web.vercel.app/) · [Judge's Quick Guide](./JUDGE.md) · [Watch the 3-minute demo](https://www.youtube.com)
 
