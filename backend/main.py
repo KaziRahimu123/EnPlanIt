@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import missions, scenarios, analysis, insights, profile, documents
+from routers import missions, scenarios, analysis, insights, profile, documents, auth, oauth
 
 app = FastAPI(
     title="EnPlanIt Space Intelligence API",
@@ -46,6 +46,10 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+# Authentication & OAuth routes
+app.include_router(auth.router,       prefix="/api/auth",       tags=["auth"])
+app.include_router(oauth.router,      prefix="/api/auth/oauth", tags=["oauth"])
 
 # Feature routes — authentication handled by Auth0 JWT in each router
 app.include_router(missions.router,   prefix="/api/missions",   tags=["missions"])
