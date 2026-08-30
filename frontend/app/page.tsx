@@ -509,7 +509,7 @@ export default function HomePage() {
                 Dual-AI Pipeline Engine
               </h3>
               <p className="text-xs text-slate-400 leading-relaxed">
-                IBM Watsonx Granite 3.0 + GPT-5.6 extract telemetry, verify constraints, and cross-reference safety standards.
+                IBM watsonx.ai Granite 20B extracts flight telemetry, verifies constraints, and cross-references safety standards.
               </p>
             </div>
 

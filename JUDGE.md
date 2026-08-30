@@ -11,7 +11,7 @@ Visit [https://enplanit-web.vercel.app/](https://enplanit-web.vercel.app/) and c
 Go to `/missions/create` and upload a spaceflight dossier (PDF, DOCX, TXT, MD up to 3 files / 20 MB) or enter a natural-language mission concept (e.g. *Artemis Base Alpha 365-Day Crewed Lunar Outpost*).
 
 ### Step 3: Experience the Mission Analysis Cockpit
-Watch **IBM Granite 3.0 on watsonx.ai** synthesize flight telemetry into structured intelligence in seconds:
+Watch **IBM Granite 20B on watsonx.ai (`ibm/granite-20b-multilingual`)** synthesize flight telemetry into structured intelligence in seconds:
 - 🪐 **Interactive Orbital Topological Map**: Trace live dependencies between Power, Communications, Thermal, Life Support, and Science.
 - 📊 **6 Extracted or Derived Mission Variables**: View extracted solar flux, orbital period, battery depth-of-discharge, and comms latency with document citations.
 - 📋 **Preliminary Mission Assessments**: Review structured action plans and step-by-step operational directives.

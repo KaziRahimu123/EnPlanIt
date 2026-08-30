@@ -20,9 +20,9 @@ EnPlanIt is a unified aerospace mission intelligence and scenario simulation pla
 | **Why it is different** | Combines AI-assisted information extraction with deterministic calculations, allowing users to explore subsystem consequences without relying on AI-generated numbers alone. |
 | **Who it is for** | Mission architects, systems engineers, mission risk and safety analysts, flight operations teams, and space exploration enthusiasts. |
 | **Document support** | Accepts up to three PDF, DOCX, TXT, or Markdown files, with a maximum size of 20 MB per file. The current prototype uses an analysis context of up to 5,000 extracted characters where applicable. |
-| **Verification pipeline** | Uses IBM Granite through watsonx.ai for initial extraction and can apply a secondary AI cross-check designed to reduce unsupported or incorrectly extracted values. |
+| **Verification pipeline** | Uses **IBM Granite 20B (`ibm/granite-20b-multilingual`)** through watsonx.ai for initial extraction and can apply an optional secondary AI cross-check designed to reduce unsupported or incorrectly extracted values. |
 | **Scenario simulation** | Evaluates changes involving power availability, battery reserves, mission duration, communication delay, crew resources, and environmental constraints. |
-| **Built with** | **IBM Granite on watsonx.ai** · **IBM Bob** · **OpenAI (optional verifier)** · **Next.js 16** · **React 19** · **Tailwind CSS v4** · **FastAPI** · **Supabase** · **Auth0** · **TypeScript** · **Python** |
+| **Built with** | **IBM Granite 20B on watsonx.ai** · **IBM Bob** · **OpenAI (optional verifier)** · **Next.js 16** · **React 19** · **Tailwind CSS v4** · **FastAPI** · **Supabase** · **Auth0** · **TypeScript** · **Python** |
 
 ---
 
@@ -114,7 +114,7 @@ flowchart TD
 | :--- | :--- |
 | **Frontend** | Next.js App Router interface, mission dashboards, document uploads, authentication flows, orbital visualizations, and scenario controls. |
 | **Backend** | FastAPI routes for missions, documents, analysis, insights, profiles, authentication, and deterministic scenario calculations. |
-| **AI pipeline** | IBM Granite on watsonx.ai performs mission parameter extraction and synthesis. When configured, a secondary model can cross-check the preliminary extraction. |
+| **AI pipeline** | IBM Granite 20B (`ibm/granite-20b-multilingual`) on watsonx.ai performs mission parameter extraction and synthesis. When configured, an optional secondary model can cross-check the preliminary extraction. |
 | **Data and storage** | Supabase PostgreSQL stores application data, while Supabase Storage manages uploaded mission documents. |
 | **Authentication** | Auth0 provides session authentication, while backend identity-resolution logic connects authenticated users to their EnPlanIt workspaces. |
 
@@ -141,7 +141,7 @@ flowchart TD
 
 IBM Bob served as an AI pair-programming partner and systems-design assistant throughout the development of EnPlanIt.
 
-- **AI Pipeline Architecture:** Helped design the mission-parameter extraction flow using IBM Granite on watsonx.ai, structured JSON outputs, and an optional second-pass cross-check.
+- **AI Pipeline Architecture:** Helped design the mission-parameter extraction flow using IBM Granite 20B on watsonx.ai, structured JSON outputs, and an optional second-pass cross-check.
 
 - **Deterministic Scenario Modeling:** Supported the implementation of explicit calculations for battery reserves, solar availability, communication delay, mission duration, radiation exposure, and crew-resource planning.
 

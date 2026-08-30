@@ -248,9 +248,10 @@ async def analyze_mission_and_save(
 
 @router.get("/status")
 async def ai_status() -> dict:
-    """Report whether AI credentials are configured and which model is active."""
+    """Report whether AI credentials are configured and which model and provider are active."""
     return {
         "ai_available": ai_client.credentials_configured(),
         "model": ai_client.active_model(),
-        "provider": "openai",
+        "provider": ai_client.active_provider(),
+        "granite_active": ai_client.granite_configured(),
     }

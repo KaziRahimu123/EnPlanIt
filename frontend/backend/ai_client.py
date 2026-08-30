@@ -7,15 +7,15 @@ Supports multi-tier model execution:
 
 Environment variables (set in backend/.env):
   # ── IBM Granite / Watsonx ──────────────────────────────────────────
-  WATSONX_APIKEY       — IBM Cloud API key for watsonx.ai
+  WATSONX_APIKEY       — IBM Cloud API key for watsonx.ai (or WATSONX_API_KEY)
   WATSONX_PROJECT_ID   — IBM watsonx.ai Project ID
   WATSONX_URL          — watsonx instance URL (default: https://us-south.ml.cloud.ibm.com)
-  WATSONX_MODEL_ID     — model ID (default: ibm/granite-3.1-8b-instruct)
+  WATSONX_MODEL_ID     — model ID (default: ibm/granite-20b-multilingual)
   
   # Or self-hosted / gateway IBM Granite:
   GRANITE_API_BASE     — OpenAI-compatible base URL (e.g. http://localhost:11434/v1)
   GRANITE_API_KEY      — API key if required
-  GRANITE_MODEL        — Model tag (default: ibm/granite-3.1-8b-instruct)
+  GRANITE_MODEL        — Model tag (default: ibm/granite-20b-multilingual)
 
   # ── OpenAI Fallback ────────────────────────────────────────────────
   OPENAI_API_KEY       — OpenAI API key
@@ -34,6 +34,16 @@ from typing import Any, Optional
 
 from dotenv import load_dotenv
 
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+_candidate_envs = [
+    os.path.join(_current_dir, ".env"),
+    os.path.join(_current_dir, "..", ".env"),
+    os.path.join(_current_dir, "..", "backend", ".env"),
+    os.path.join(_current_dir, "..", "frontend", ".env.local"),
+]
+for _env_path in _candidate_envs:
+    if os.path.isfile(_env_path):
+        load_dotenv(_env_path)
 load_dotenv()
 
 logger = logging.getLogger(__name__)
@@ -42,17 +52,17 @@ logger = logging.getLogger(__name__)
 # Configuration
 # ---------------------------------------------------------------------------
 
-_OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
-_OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-5.6-luna")
+_OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "").strip()
+_OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-5.6-luna").strip()
 
-_WATSONX_APIKEY: str = os.getenv("WATSONX_APIKEY", "")
-_WATSONX_PROJECT_ID: str = os.getenv("WATSONX_PROJECT_ID", "")
+_WATSONX_APIKEY: str = (os.getenv("WATSONX_APIKEY") or os.getenv("WATSONX_API_KEY") or "").strip()
+_WATSONX_PROJECT_ID: str = os.getenv("WATSONX_PROJECT_ID", "").strip()
 _WATSONX_URL: str = os.getenv("WATSONX_URL", "https://us-south.ml.cloud.ibm.com").rstrip("/")
-_WATSONX_MODEL_ID: str = os.getenv("WATSONX_MODEL_ID", "ibm/granite-20b-multilingual")
+_WATSONX_MODEL_ID: str = os.getenv("WATSONX_MODEL_ID", "ibm/granite-20b-multilingual").strip()
 
-_GRANITE_API_BASE: str = os.getenv("GRANITE_API_BASE", "")
-_GRANITE_API_KEY: str = os.getenv("GRANITE_API_KEY", "")
-_GRANITE_MODEL: str = os.getenv("GRANITE_MODEL", "ibm/granite-20b-multilingual")
+_GRANITE_API_BASE: str = os.getenv("GRANITE_API_BASE", "").strip()
+_GRANITE_API_KEY: str = os.getenv("GRANITE_API_KEY", "").strip()
+_GRANITE_MODEL: str = os.getenv("GRANITE_MODEL", "ibm/granite-20b-multilingual").strip()
 
 _openai_client = None
 _granite_client = None
@@ -80,7 +90,7 @@ def _get_granite_client():
 
 def granite_configured() -> bool:
     """Check if IBM Granite is configured via Watsonx.ai or local/gateway endpoint."""
-    has_watsonx = bool(_WATSONX_APIKEY and _WATSONX_PROJECT_ID and not _WATSONX_APIKEY.startswith("YOUR_"))
+    has_watsonx = bool(_WATSONX_APIKEY and _WATSONX_PROJECT_ID and not _WATSONX_APIKEY.startswith("YOUR_") and not _WATSONX_PROJECT_ID.startswith("YOUR_"))
     has_custom = bool(_GRANITE_API_BASE)
     return has_watsonx or has_custom
 
@@ -98,7 +108,18 @@ def credentials_configured() -> bool:
 def active_model() -> str:
     if granite_configured():
         return _WATSONX_MODEL_ID if _WATSONX_APIKEY else _GRANITE_MODEL
-    return _OPENAI_MODEL
+    if openai_configured():
+        return _OPENAI_MODEL
+    return "deterministic-rule-engine"
+
+
+def active_provider() -> str:
+    """Return active provider string: 'watsonx' | 'granite-gateway' | 'openai' | 'deterministic-fallback'."""
+    if granite_configured():
+        return "watsonx" if _WATSONX_APIKEY else "granite-gateway"
+    if openai_configured():
+        return "openai"
+    return "deterministic-fallback"
 
 
 # ---------------------------------------------------------------------------

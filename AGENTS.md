@@ -10,7 +10,7 @@ Welcome to the **EnPlanIt** codebase. This repository contains a full-stack aero
 - **`backend/`**: FastAPI (Python 3.11+) asynchronous microservice.
   - `main.py`: Application entry point with dynamic CORS middleware.
   - `auth0.py`: RS256 JWT validation and canonical sub resolution.
-  - `granite.py`: IBM watsonx.ai Granite 3.0 inference client.
+  - `granite.py`: IBM watsonx.ai Granite 20B inference client.
   - `ai_client.py`: Dual-pass verification pipeline.
   - `routers/`: Endpoint routers (`missions.py`, `analysis.py`, `scenarios.py`, `documents.py`, `insights.py`, `profile.py`).
 - **`supabase/`**: PostgreSQL schema (`schema.sql`) and database table definitions.

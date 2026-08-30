@@ -30,10 +30,10 @@ logger = logging.getLogger(__name__)
 # Configuration
 # ---------------------------------------------------------------------------
 
-_API_KEY = os.getenv("WATSONX_API_KEY", "")
-_PROJECT_ID = os.getenv("WATSONX_PROJECT_ID", "")
+_API_KEY = (os.getenv("WATSONX_API_KEY") or os.getenv("WATSONX_APIKEY") or "").strip()
+_PROJECT_ID = os.getenv("WATSONX_PROJECT_ID", "").strip()
 _BASE_URL = os.getenv("WATSONX_URL", "https://us-south.ml.cloud.ibm.com").rstrip("/")
-_MODEL_ID = os.getenv("WATSONX_MODEL_ID", "ibm/granite-3-3-8b-instruct")
+_MODEL_ID = os.getenv("WATSONX_MODEL_ID", "ibm/granite-20b-multilingual").strip()
 
 _IAM_URL = "https://iam.cloud.ibm.com/identity/token"
 _GENERATE_PATH = "/ml/v1/text/generation?version=2023-05-29"
