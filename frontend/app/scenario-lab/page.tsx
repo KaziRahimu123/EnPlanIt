@@ -492,7 +492,7 @@ function ScenarioContent() {
       eclipseStr = "Eclipse: 1.2h";
     }
 
-    // 4. NASA-STD-3001 Consumable Burn (2.5 kg water, 4.8 kg total/person/day)
+    // 4. Reference Consumables Burn (NASA HIDH SP-2010-3407 §6.2: 2.5 kg water, 4.8 kg total/person/day)
     const dailyWaterKg = Math.round(crewSize * 2.5 * 10) / 10;
     const dailyTotalConsumablesKg = Math.round(crewSize * 4.8 * 10) / 10;
     const totalConsumablesKg = Math.round(effectiveDays * dailyTotalConsumablesKg);
@@ -1299,7 +1299,7 @@ function ScenarioContent() {
                   {activeEnvironment.daily_water_burn_kg} kg/day
                 </div>
                 <div className="text-[8px] text-emerald-400/80 mt-0.5">
-                  Crew of {activeEnvironment.crew_size} (NASA-STD-3001)
+                  Crew of {activeEnvironment.crew_size} (NASA HIDH baseline)
                 </div>
               </div>
 
@@ -1317,7 +1317,7 @@ function ScenarioContent() {
                   {activeEnvironment.estimated_radiation_msv} mSv
                 </div>
                 <div className="text-[8px] text-[var(--text-muted)] mt-0.5">
-                  {activeEnvironment.career_limit_pct}% of 600 mSv limit
+                  {activeEnvironment.career_limit_pct}% of NASA-STD-3001 limit (600 mSv)
                 </div>
               </div>
             </div>

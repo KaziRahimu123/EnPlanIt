@@ -17,6 +17,6 @@ Welcome to the **EnPlanIt** codebase. This repository contains a full-stack aero
 
 ## Key Development Rules
 1. **Never hardcode API keys or secrets** in source code. Use environment variables.
-2. **Deterministic Aerospace Equations**: All scenario simulation calculations in `scenarios.py` adhere to real physical equations (Peukert battery discharge, inverse square solar irradiance, NASA-STD-3001 consumable budgets).
+2. **Deterministic Aerospace Equations**: All scenario simulation calculations in `scenarios.py` adhere to real physical equations and reference planning heuristics (Peukert battery discharge, inverse square solar irradiance, NASA HIDH SP-2010-3407 §6.2 consumable planning heuristics, and NASA-STD-3001 Vol 1 §4.8.2 radiation reference limits).
 3. **Type Safety**: Run `cd frontend && npx tsc --noEmit` to verify TypeScript builds before committing.
 4. **Code Quality**: Keep functions modular and maintain clean documentation.

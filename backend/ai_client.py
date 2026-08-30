@@ -644,7 +644,7 @@ def _build_deterministic_insights(
     for c in changed_vars:
         k = c.get("key") or ""
         if "duration" in k:
-            physics_notes.append("Mission duration expansion increases daily consumable burn (calculated using NASA-STD-3001 baseline: 19.2 kg/day for 4 crew) and accumulates cosmic ionizing radiation exposure.")
+            physics_notes.append("Mission duration expansion increases daily consumable burn (evaluated using NASA HIDH SP-2010-3407 §6.2 planning heuristic: 19.2 kg/day for 4 crew) and accumulates cosmic ionizing radiation exposure.")
         elif "solar" in k:
             physics_notes.append("Solar power variance impacts direct photovoltaic generation and reduces daytime battery recharge buffers.")
         elif "battery" in k:
@@ -673,7 +673,7 @@ def _build_deterministic_insights(
         if "solar" in k or "battery" in k or "consumption" in k:
             directives.append("Audit microgrid depth-of-discharge and confirm peak survival power during dark periods.")
         if "duration" in k or "resource" in k:
-            directives.append("Verify life-support consumable resupply schedules against NASA-STD-3001 baseline (19.2 kg/day for 4 crew) and assess radiation shielding thickness.")
+            directives.append("Verify life-support consumable resupply schedules against NASA HIDH / BVAD reference heuristic (19.2 kg/day for 4 crew) and assess radiation shielding thickness against NASA-STD-3001 Vol 1 §4.8.2 limits.")
         if "comm" in k:
             directives.append("Validate onboard autonomous safety protocols for time-critical emergency maneuvers.")
 

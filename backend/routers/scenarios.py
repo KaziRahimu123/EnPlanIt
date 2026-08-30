@@ -133,13 +133,15 @@ def calculate_crew_consumables(
     contingency_reserve_pct: float = 15.0,
 ) -> dict[str, Any]:
     """
-    Standardized Consumables Logistics Model (NASA-STD-3001 Human Spaceflight Baseline).
-    Single documented per-person per-day nominal baseline:
-      - Drinking, food prep & hygiene water: 2.50 kg/person/day
-      - Metabolic oxygen (O2) consumption: 0.84 kg/person/day
-      - Shelf-stable nutrition & dry food ration: 1.46 kg/person/day
-      - Total nominal burn: 4.80 kg/person/day (19.20 kg/day for 4 crew)
-      - Flight contingency reserve buffer: +15%
+    Reference-Based Consumables Planning Model.
+    Sourced from NASA Human Integration Design Handbook (NASA/SP-2010-3407 §6.2 / §7.2) 
+    and NASA Baseline Values & Assumptions Document (BVAD, NASA/TP-2015-218570), 
+    aligned with NASA-STD-3001 Vol 2 Human Factors and Environmental Health guidelines:
+      - Drinking, food prep & hygiene water: 2.50 kg/person/day (NASA HIDH §6.2)
+      - Metabolic oxygen (O2) consumption: 0.84 kg/person/day (NASA HIDH §6.2 / BVAD)
+      - Shelf-stable nutrition & dry food ration: 1.46 kg/person/day (NASA HIDH §7.2)
+      - Nominal reference planning heuristic: 4.80 kg/person/day (19.20 kg/day for 4 crew)
+      - Flight logistics contingency reserve buffer: +15%
     """
     crew = max(1, crew_size)
     days = max(0.0, duration_days)
@@ -181,7 +183,7 @@ def calculate_crew_consumables(
         "contingency_reserve_pct": contingency_reserve_pct,
         "contingency_reserve_kg": contingency_mass,
         "total_with_contingency_kg": total_with_contingency,
-        "standard_reference": "NASA-STD-3001 (4.80 kg/person/day nominal baseline with +15% reserve)",
+        "standard_reference": "Reference planning heuristic (NASA HIDH SP-2010-3407 §6.2 / BVAD baseline: 4.80 kg/person/day nominal +15% reserve, aligned with NASA-STD-3001 Vol 2)",
     }
 
 
@@ -194,12 +196,12 @@ def calculate_radiation_exposure(
 ) -> dict[str, Any]:
     """
     Reference Radiation Exposure Estimation.
-    Daily dose rates are explicit baseline mission assumptions:
+    Daily dose rates are planning assumptions derived from NASA human exploration literature:
       - Deep space transit (unshielded GCR/SPE): ~1.50 mSv/day (assumption)
-      - Mars surface (atmospheric + planetary shielding): ~0.70 mSv/day (assumption)
+      - Mars surface (atmospheric + regolith shielding): ~0.70 mSv/day (assumption)
       - Lunar surface (unshielded regolith): ~1.20 mSv/day (assumption)
       - LEO orbital environment (geomagnetic shielding): ~0.40 mSv/day (assumption)
-    Standard: Evaluated against NASA 600 mSv Lifetime Career Astronaut Radiation Exposure Limit.
+    Reference limit: Evaluated against NASA-STD-3001 Vol 1 Rev B §4.8.2 / NCRP Report No. 132 600 mSv career astronaut radiation exposure reference limit.
     """
     dest_lower = destination.lower()
     days = max(0.0, mission_duration_days)
@@ -244,7 +246,7 @@ def calculate_radiation_exposure(
 
     methodology = (
         f"Calculated as (transit {t_days:.0f}d × {transit_rate:.2f} mSv/d + surface {s_days:.0f}d × {surface_rate:.2f} mSv/d) "
-        f"× {effective_mult:.2f} shielding factor compared against the NASA 600 mSv career limit."
+        f"× {effective_mult:.2f} shielding factor evaluated against the NASA-STD-3001 Vol 1 §4.8.2 600 mSv career reference limit."
     )
 
     return {
@@ -403,8 +405,8 @@ def _power_concern(v: ScenarioVariables) -> ConcernResult:
 
 def _resource_concern(v: ScenarioVariables) -> ConcernResult:
     """
-    Life Support (ECLSS) Consumables Evaluation (NASA-STD-3001 Baseline):
-      - 4.80 kg/person/day nominal baseline: Water (2.50 kg), Oxygen (0.84 kg), Food (1.46 kg).
+    Life Support (ECLSS) Consumables Evaluation (Reference Planning Heuristic):
+      - 4.80 kg/person/day nominal baseline (NASA HIDH SP-2010-3407 §6.2 / BVAD): Water (2.50 kg), Oxygen (0.84 kg), Food (1.46 kg).
       - Daily nominal burn for 4 crew = 19.20 kg/day.
     """
     pct = v.resource_availability_pct
@@ -431,7 +433,7 @@ def _resource_concern(v: ScenarioVariables) -> ConcernResult:
         return ConcernResult(
             level="MEDIUM",
             reason=(
-                f"ECLSS capacity at {pct:.0f}%. Consumable burn: {daily_total:.1f} kg/day for 4 crew (NASA-STD-3001 baseline: 4.80 kg/person/day). "
+                f"ECLSS capacity at {pct:.0f}%. Consumable burn: {daily_total:.1f} kg/day for 4 crew (NASA HIDH §6.2 / BVAD reference heuristic: 4.80 kg/person/day). "
                 "Closed-loop recovery efficiency must maintain >=90% to avoid premature consumable exhaustion."
             ),
         )
@@ -487,9 +489,9 @@ def _communication_concern(v: ScenarioVariables) -> ConcernResult:
 
 def _duration_concern(v: ScenarioVariables) -> ConcernResult:
     """
-    Mission Duration, Radiation Dose, and Consumables Logistics Evaluation:
-      - Radiation: Evaluates cumulative dose against the NASA 600 mSv lifetime career astronaut limit.
-      - Consumables: Uses NASA-STD-3001 baseline (4.80 kg/person/day = 19.20 kg/day for 4 crew).
+    Mission Duration, Radiation Dose, and Consumables Logistics Evaluation (Reference Heuristics):
+      - Radiation: Evaluates cumulative dose against the NASA-STD-3001 Vol 1 §4.8.2 600 mSv career astronaut radiation limit.
+      - Consumables: Uses NASA HIDH SP-2010-3407 / BVAD planning baseline (4.80 kg/person/day = 19.20 kg/day for 4 crew).
     """
     days = v.mission_duration_days
     if days <= 0:
@@ -511,8 +513,8 @@ def _duration_concern(v: ScenarioVariables) -> ConcernResult:
             level="LOW",
             reason=(
                 f"Mission span: {days:.0f} days. Estimated cumulative radiation: {radiation_msv:.1f} mSv "
-                f"({career_limit_pct:.1f}% of NASA 600 mSv career limit). Consumables payload mass: {consumables_mass_kg:,.0f} kg nominal "
-                f"({total_with_reserve_kg:,.0f} kg with +15% reserve, NASA-STD-3001 4-crew baseline: 19.2 kg/day)."
+                f"({career_limit_pct:.1f}% of NASA-STD-3001 600 mSv career reference limit). Consumables payload mass: {consumables_mass_kg:,.0f} kg nominal "
+                f"({total_with_reserve_kg:,.0f} kg with +15% reserve, NASA HIDH SP-2010-3407 4-crew baseline: 19.2 kg/day)."
             ),
         )
     elif days <= 270:
@@ -520,7 +522,7 @@ def _duration_concern(v: ScenarioVariables) -> ConcernResult:
             level="MEDIUM",
             reason=(
                 f"Mission span: {days:.0f} days. Estimated cumulative radiation: {radiation_msv:.1f} mSv "
-                f"({career_limit_pct:.1f}% of NASA 600 mSv career limit). Consumables budget: {consumables_mass_kg:,.0f} kg nominal "
+                f"({career_limit_pct:.1f}% of NASA-STD-3001 600 mSv career reference limit). Consumables budget: {consumables_mass_kg:,.0f} kg nominal "
                 f"({total_with_reserve_kg:,.0f} kg with +15% reserve, 19.2 kg/day for 4 crew). "
                 "Requires active bio-monitoring and musculoskeletal exercise protocols."
             ),
@@ -530,7 +532,7 @@ def _duration_concern(v: ScenarioVariables) -> ConcernResult:
             level="HIGH",
             reason=(
                 f"Mission span: {days:.0f} days. Estimated cumulative radiation: {radiation_msv:.1f} mSv "
-                f"({career_limit_pct:.1f}% of NASA 600 mSv career limit). Consumables logistics mass: {consumables_mass_kg:,.0f} kg nominal "
+                f"({career_limit_pct:.1f}% of NASA-STD-3001 600 mSv career reference limit). Consumables logistics mass: {consumables_mass_kg:,.0f} kg nominal "
                 f"({total_with_reserve_kg:,.0f} kg with +15% reserve). "
                 "Severe chronic GCR/SPE exposure risk; engineered regolith storm shelter mandatory."
             ),
@@ -754,7 +756,7 @@ def _build_full_scenario_response(mission_id: str | None, before: ScenarioVariab
             source_subsystem="Mission Timeline",
             impacted_subsystem="Crew Health & Bio-Shielding",
             severity="CRITICAL" if rad_dose > 600 else "HIGH",
-            description=f"Mission duration ({after.mission_duration_days:.0f}d) pushes cumulative radiation exposure to {rad_dose:.0f} mSv{' (exceeds NASA 600 mSv career limit without regolith shielding)' if rad_dose > 600 else ''} and requires {total_kg:,.0f} kg total life-support consumables (NASA-STD-3001 baseline: 4.80 kg/person/day with 15% reserve).",
+            description=f"Mission duration ({after.mission_duration_days:.0f}d) pushes cumulative radiation exposure to {rad_dose:.0f} mSv{' (exceeds NASA-STD-3001 Vol 1 §4.8.2 600 mSv career limit without regolith shielding)' if rad_dose > 600 else ''} and requires {total_kg:,.0f} kg total life-support consumables (NASA HIDH SP-2010-3407 §6.2 reference heuristic: 4.80 kg/person/day with 15% reserve).",
         ))
 
     # Cascade 3: Communication Delay -> Autonomous Flight Safety
