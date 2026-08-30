@@ -52,6 +52,7 @@ def _save_analysis(
         sub = (auth0_sub or "").strip()
         if not sub:
             return False, "Authentication required"
+        sb = get_supabase()
         mission = (
             sb.table("missions")
             .select("id")
