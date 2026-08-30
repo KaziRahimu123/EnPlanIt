@@ -676,12 +676,21 @@ function AnalysisContent() {
             <span>⚠️</span>
             <span>{saveWarning}</span>
           </div>
-          <button
-            onClick={handleAnalyze}
-            className="px-3 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-bold text-[11px] uppercase tracking-wider transition-colors shrink-0"
-          >
-            Retry Save ↻
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleAnalyze}
+              className="px-3 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-bold text-[11px] uppercase tracking-wider transition-colors"
+            >
+              Retry Save ↻
+            </button>
+            <button
+              onClick={() => setSaveWarning(null)}
+              className="px-2 py-1 rounded hover:bg-amber-500/20 text-amber-400 hover:text-white transition-colors"
+              title="Dismiss notification"
+            >
+              ✕
+            </button>
+          </div>
         </div>
       )}
 
