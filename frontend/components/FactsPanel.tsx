@@ -44,18 +44,6 @@ const STATE_CONFIG: Record<
   },
 };
 
-function StateBadge({ state }: { state: DocumentFact["state"] }) {
-  const cfg = STATE_CONFIG[state] ?? STATE_CONFIG.not_specified;
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[9.5px] font-mono font-bold uppercase tracking-wider ${cfg.textColor} ${cfg.borderColor} ${cfg.bgColor}`}
-    >
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dotColor} ${state === "extracted" || state === "confirmed" ? "animate-pulse" : ""}`} />
-      {cfg.label}
-    </span>
-  );
-}
-
 const FIELD_ICONS: Record<string, { icon: string; title: string; categoryTag: string }> = {
   mission_duration_days: {
     icon: "⏱️",
@@ -121,19 +109,6 @@ export default function FactsPanel({
   powerSource,
   knownResources,
 }: FactsPanelProps) {
-  if (loading) {
-    return (
-      <div className="rounded-xl border border-[#1e3a5f] bg-[#050f20] p-5 animate-pulse">
-        <div className="h-3 w-40 bg-[#1e3a5f] rounded mb-4" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-28 bg-[#030914] rounded-lg border border-[#1e3a5f]/40" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   // Merge server facts with prompt metadata and regex fallbacks
   const effectiveFacts = useMemo(() => {
     const list = [...facts];
@@ -269,6 +244,20 @@ export default function FactsPanel({
   }, [facts, missionDescription, duration, powerSource, knownResources]);
 
   const isAerospace = useMemo(() => isAerospaceText(missionDescription), [missionDescription]);
+
+  if (loading) {
+    return (
+      <div className="rounded-xl border border-[#1e3a5f] bg-[#050f20] p-5 animate-pulse">
+        <div className="h-3 w-40 bg-[#1e3a5f] rounded mb-4" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-28 bg-[#030914] rounded-lg border border-[#1e3a5f]/40" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   const verifiedCount = effectiveFacts.filter((f) => f.state !== "not_specified").length;
 
   return (
