@@ -28,9 +28,7 @@ EnPlanIt is a unified aerospace mission intelligence and scenario simulation pla
 
 ## The problem
 
-Space mission documentation is dense, multidisciplinary, and distributed across proposals, flight specifications, telemetry briefs, safety requirements, and operational plans. A change to one mission parameter can affect several connected systems. Reduced solar exposure can influence power generation and battery reserves, while a longer mission can alter crew consumables, radiation exposure, maintenance needs, and communication planning.
-
-These relationships are often reviewed through separate documents, spreadsheets, and specialized tools. General-purpose AI assistants can summarize documents, but summaries alone do not provide a structured model of mission dependencies or a reliable method for calculating downstream effects. Mission teams need a faster way to organize source material, identify missing parameters, visualize subsystem relationships, and test proposed changes.
+Early-phase spaceflight formulation (NASA Pre-Phase A requires 12 to 18 months and consumes up to 40% of engineers' time for simply extracting and cross-checking parameters across 300+ pages of disjointed PDFs, telemetry briefs, and subsystem proposals. When flight parameters change, such as a 180-day mission extension, systems engineers spend weeks manually recalculating cascading effects across power, thermal, life support, and comms in disconnected spreadsheets. This manual lag delays and leaves cascading subsystem vulnerabilities undetected. 
 
 ---
 
