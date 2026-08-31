@@ -2126,18 +2126,41 @@ function renderNodeGlyph(iconType: string, strokeColor: string) {
           onMouseMove={(e) => e.stopPropagation()}
           onWheel={(e) => e.stopPropagation()}
         >
-          {[
-            { t: "+", title: "Zoom In", a: () => setTransform((t) => ({ ...t, scale: Math.min(MAX_ZOOM, t.scale * 1.10) })) },
-            { t: "−", title: "Zoom Out", a: () => setTransform((t) => ({ ...t, scale: Math.max(MIN_ZOOM, t.scale / 1.10) })) },
-            { t: "⊙", title: "Center View", a: () => setTransform({ x: 0, y: 0, scale: 1 }) },
-            { t: "↺", title: "Snap Nodes to Orbit", a: resetLayout },
-            { t: isFullscreen ? "⤡" : "⤢", title: "Toggle Fullscreen", a: toggleFullscreen },
-          ].map(({ t, title, a }) => (
-            <button key={t} onClick={a} title={title}
-              className="w-6 h-6 rounded border border-[#1e3a5f] bg-[rgba(6,14,30,0.85)] text-[var(--text-muted)] hover:text-white hover:border-[var(--accent)] hover:bg-[rgba(59,130,246,0.25)] transition-all text-xs font-mono flex items-center justify-center cursor-pointer">
-              {t}
-            </button>
-          ))}
+          <button
+            onClick={() => setTransform((t) => ({ ...t, scale: Math.min(MAX_ZOOM, t.scale * 1.10) }))}
+            title="Zoom In"
+            className="w-6 h-6 rounded border border-[#1e3a5f] bg-[rgba(6,14,30,0.85)] text-[var(--text-muted)] hover:text-white hover:border-[var(--accent)] hover:bg-[rgba(59,130,246,0.25)] transition-all text-xs font-mono flex items-center justify-center cursor-pointer"
+          >
+            +
+          </button>
+          <button
+            onClick={() => setTransform((t) => ({ ...t, scale: Math.max(MIN_ZOOM, t.scale / 1.10) }))}
+            title="Zoom Out"
+            className="w-6 h-6 rounded border border-[#1e3a5f] bg-[rgba(6,14,30,0.85)] text-[var(--text-muted)] hover:text-white hover:border-[var(--accent)] hover:bg-[rgba(59,130,246,0.25)] transition-all text-xs font-mono flex items-center justify-center cursor-pointer"
+          >
+            −
+          </button>
+          <button
+            onClick={() => setTransform({ x: 0, y: 0, scale: 1 })}
+            title="Center View"
+            className="w-6 h-6 rounded border border-[#1e3a5f] bg-[rgba(6,14,30,0.85)] text-[var(--text-muted)] hover:text-white hover:border-[var(--accent)] hover:bg-[rgba(59,130,246,0.25)] transition-all text-xs font-mono flex items-center justify-center cursor-pointer"
+          >
+            ⊙
+          </button>
+          <button
+            onClick={resetLayout}
+            title="Snap Nodes to Orbit"
+            className="w-6 h-6 rounded border border-[#1e3a5f] bg-[rgba(6,14,30,0.85)] text-[var(--text-muted)] hover:text-white hover:border-[var(--accent)] hover:bg-[rgba(59,130,246,0.25)] transition-all text-xs font-mono flex items-center justify-center cursor-pointer"
+          >
+            ↺
+          </button>
+          <button
+            onClick={toggleFullscreen}
+            title="Toggle Fullscreen"
+            className="w-6 h-6 rounded border border-[#1e3a5f] bg-[rgba(6,14,30,0.85)] text-[var(--text-muted)] hover:text-white hover:border-[var(--accent)] hover:bg-[rgba(59,130,246,0.25)] transition-all text-xs font-mono flex items-center justify-center cursor-pointer"
+          >
+            {isFullscreen ? "⤡" : "⤢"}
+          </button>
         </div>
 
         {/* ── Bottom filter bar ── */}
