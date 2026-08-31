@@ -8,7 +8,7 @@ EnPlanIt is a unified aerospace mission intelligence and scenario simulation pla
 
 > **Built for the IBM AI Builders Challenge (August 2026, Advance Space Exploration with AI).**
 
-[Try the live demo](https://enplanit-web.vercel.app/) · [Judge's Quick Guide](./JUDGE.md) · [Watch the 3-minute demo](https://www.youtube.com)
+[Try the live demo](https://enplanit-web.vercel.app/) · [Judge's Quick Guide](./JUDGE.md) · [Watch the 3-minute demo](https://youtu.be/-xclATddQx0?si=UXPeeEQ0FYvRPQoN)
 
 ---
 
